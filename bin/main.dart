@@ -11,6 +11,7 @@ int x = 10;
 float y = 3.14;
 String nome = "João";
 bool ativo = true;
+uids z = "Wisley";
 
 
 if (x>5) {

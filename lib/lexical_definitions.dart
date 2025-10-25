@@ -16,4 +16,5 @@ const Set<String> PALAVRAS_RESERVADAS = {
   'return', 'void', 'main', 'true', 'false', 'null',
   'class', 'public', 'private', 'static', 'final',
   'import', 'package', 'new', 'this', 'super'
+  , 'uids'
 };

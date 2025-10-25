@@ -17,7 +17,11 @@ functionDecl  ::= 'public'? 'static'? type IDENT '(' [ paramList ] ')' block ;
 paramList     ::= param { ',' param } ;
 param         ::= type IDENT ;
 
-varDecl       ::= type IDENT [ '=' expression ] ';' ;
+// Declaração de variável pode ser com tipo explícito ou com 'uids' para inferência
+// Nota: para declarações com 'uids' recomendamos exigir inicializador para permitir inferência;
+// a gramática abaixo aceita ambos, a verificação de presença do inicializador é feita no analisador semântico.
+varDecl       ::= type IDENT [ '=' expression ] ';'
+                | 'uids' IDENT [ '=' expression ] ';' ;
 
 // Tipos básicos
 type          ::= 'int' | 'float' | 'double' | 'string' | 'bool' | 'void' | IDENT ;
