@@ -163,6 +163,31 @@ void main() {
 }
 ```
 
+## Erros léxicos estruturados
+
+O lexer também expõe erros léxicos em formato estruturado através do getter `lexer.listaErrosEstruturados`, que retorna uma `List<LexError>` com os campos:
+
+- `mensagem` (String): descrição curta do erro.
+- `linha` (int): linha onde o erro ocorreu (1-based).
+- `coluna` (int): coluna onde o erro ocorreu (1-based).
+- `contexto` (String): trecho do código ao redor da posição do erro (com novas linhas substituídas por `\u21B5` para legibilidade).
+
+Exemplo de uso:
+
+```dart
+final lexer = Lexer('int x = @ 42;');
+final tokens = lexer.analisar();
+if (lexer.temErros) {
+  for (final err in lexer.listaErrosEstruturados) {
+    print('Erro: ${err.mensagem} (linha: ${err.linha}, coluna: ${err.coluna})');
+    print('Contexto: ' + err.contexto);
+  }
+}
+```
+
+Essa representação facilita relatórios, testes e integração com ferramentas que consumam erros estruturados (por exemplo, formatadores de IDE).
+
+
 ## 📊 Exemplo de Saída
 
 ```

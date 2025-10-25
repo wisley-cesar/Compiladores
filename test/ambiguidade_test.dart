@@ -9,16 +9,16 @@ void main() {
       final lexer = Lexer('if (x > 5)) {');
       final tokens = lexer.analisar();
       
-      expect(lexer.temErros, isTrue);
-      expect(lexer.listaErros.any((e) => e.contains('Parêntese extra detectado')), isTrue);
+  expect(lexer.temErros, isTrue);
+  expect(lexer.listaErrosEstruturados.any((e) => e.mensagem.contains('Parêntese extra detectado')), isTrue);
     });
 
     test('deve detectar chaves extras consecutivas', () {
       final lexer = Lexer('if (x > 5) { }}');
       final tokens = lexer.analisar();
       
-      expect(lexer.temErros, isTrue);
-      expect(lexer.listaErros.any((e) => e.contains('Chave extra detectada')), isTrue);
+  expect(lexer.temErros, isTrue);
+  expect(lexer.listaErrosEstruturados.any((e) => e.mensagem.contains('Chave extra detectada')), isTrue);
     });
 
     test('deve processar palavras reservadas sem espaços corretamente', () {
@@ -34,8 +34,8 @@ void main() {
       final lexer = Lexer('if (x > 5)){');
       final tokens = lexer.analisar();
       
-      expect(lexer.temErros, isTrue);
-      expect(lexer.listaErros.any((e) => e.contains('Parêntese extra antes de chave')), isTrue);
+  expect(lexer.temErros, isTrue);
+  expect(lexer.listaErrosEstruturados.any((e) => e.mensagem.contains('Parêntese extra antes de chave')), isTrue);
     });
 
     test('deve detectar operadores sem espaços adequados', () {
@@ -50,8 +50,8 @@ void main() {
       final lexer = Lexer('int x = 10;;');
       final tokens = lexer.analisar();
       
-      expect(lexer.temErros, isTrue);
-      expect(lexer.listaErros.any((e) => e.contains('Ponto e vírgula duplo detectado')), isTrue);
+  expect(lexer.temErros, isTrue);
+  expect(lexer.listaErrosEstruturados.any((e) => e.mensagem.contains('Ponto e vírgula duplo detectado')), isTrue);
     });
 
     test('deve detectar múltiplas ambiguidades no mesmo código', () {

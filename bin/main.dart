@@ -13,7 +13,8 @@ String nome = "João";
 bool ativo = true;
 
 
-if (x>5){
+if (x>5) {
+    print("X é maior que 5");
 }
 if (x > 5 && y < 10.0) {
     x = x + 1;

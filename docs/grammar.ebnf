@@ -1,0 +1,109 @@
+(* Gramática EBNF esqueleto para a linguagem do compilador *).
+(* Produzida automaticamente a partir das palavras reservadas e símbolos do projeto. *)
+
+(* Notas:
+   - Esta gramática é um ponto de partida: refine precedências, associatividade e regras
+     de declaração conforme suas necessidades.
+   - Tokens lexicais (IDENT, NUMBER, STRING, etc.) são definidos na seção "Lexical" abaixo.
+   - Comentários (//, /* */) e espaços são ignorados pelo lexer.
+*)
+
+program       ::= { topLevelDecl } ;
+
+// Declarações de topo: variáveis ou funções
+topLevelDecl  ::= functionDecl | varDecl | statement ;
+
+functionDecl  ::= 'public'? 'static'? type IDENT '(' [ paramList ] ')' block ;
+paramList     ::= param { ',' param } ;
+param         ::= type IDENT ;
+
+varDecl       ::= type IDENT [ '=' expression ] ';' ;
+
+// Tipos básicos
+type          ::= 'int' | 'float' | 'double' | 'string' | 'bool' | 'void' | IDENT ;
+
+// Blocos e statements
+block         ::= '{' { statement } '}' ;
+statement     ::= block
+                 | ifStmt
+                 | whileStmt
+                 | forStmt
+                 | returnStmt
+                 | exprStmt
+                 | varDecl
+                 | ';' ;
+
+ifStmt        ::= 'if' '(' expression ')' statement [ 'else' statement ] ;
+whileStmt     ::= 'while' '(' expression ')' statement ;
+forStmt       ::= 'for' '(' [ forInit ] ';' [ expression ] ';' [ expression ] ')' statement ;
+forInit       ::= varDecl | exprStmt ;
+returnStmt    ::= 'return' [ expression ] ';' ;
+exprStmt      ::= expression ';' ;
+
+// Expressões (esqueleto com precedência sugerida)
+expression    ::= assignment ;
+
+assignment    ::= conditional [ ( '=' | '+=' | '-=' | '*=' | '/=' ) assignment ] ;
+
+conditional   ::= logical_or [ '?' expression ':' conditional ] ;
+
+logical_or    ::= logical_and { '||' logical_and } ;
+logical_and   ::= equality { '&&' equality } ;
+
+equality      ::= relational { ( '==' | '!=' ) relational } ;
+
+relational    ::= shift { ( '<' | '>' | '<=' | '>=' ) shift } ;
+
+shift         ::= additive { ( '<<' | '>>' | '>>>' ) additive } ;
+
+additive      ::= multiplicative { ( '+' | '-' ) multiplicative } ;
+
+multiplicative ::= unary { ( '*' | '/' | '%' ) unary } ;
+
+unary         ::= ( '+' | '-' | '!' | '++' | '--' ) unary
+                 | postfix ;
+
+postfix       ::= primary { ( '++' | '--' ) } ;
+
+primary       ::= literal
+                 | IDENT
+                 | IDENT '(' [ argList ] ')'
+                 | '(' expression ')'
+                 ;
+
+argList       ::= expression { ',' expression } ;
+
+literal       ::= NUMBER | STRING | 'true' | 'false' | 'null' ;
+
+// -----------------------------------------------------------------------------
+// Lexical (tokens) - definir no lexer
+// -----------------------------------------------------------------------------
+// IDENT  : letter ( letter | digit | '_' )*
+// NUMBER : digit+ ('.' digit+)? ([eE] [+-]? digit+)?
+// STRING : '"' ( escape | ~('"'|'\\') )* '"'
+// letter : [a-zA-Z_]
+// digit  : [0-9]
+//
+// Símbolos e operadores reconhecidos (verificar em lexical_definitions.dart):
+// OPERADORES: + - * / % = == != < > <= >= && || ! ++ -- += -= *= /= & | ^ ~ << >> >>> >>= <<= =>
+// SIMBOLOS: ( ) { } [ ] ; , . : ? ->
+// Palavras reservadas (exemplos extraídas do projeto):
+// if else while for do break continue int float double string bool char return void main true false null
+// class public private static final import package new this super
+
+// Comentários:
+//  LINE_COMMENT : '//' .*? '\n'
+//  BLOCK_COMMENT: '/*' .*? '*/'   (atenção para comentário não fechado)
+
+// Espaçamento (ignorados): whitespace = ( ' ' | '\t' | '\r' | '\n' )+
+
+// -----------------------------------------------------------------------------
+// Exemplos de trechos válidos (para testes):
+// int x = 10;
+// float y = 3.14e-2;
+// string s = "Hello\nWorld";
+// if (x > 0) { x = x - 1; }
+// for (int i = 0; i < 10; i++) { print(i); }
+// -----------------------------------------------------------------------------
+
+(* Fim do esqueleto de gramática *)

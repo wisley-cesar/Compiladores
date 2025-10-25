@@ -94,7 +94,7 @@ void main() {
       final tokens = lexer.analisar();
       
       expect(lexer.temErros, isTrue);
-      expect(lexer.listaErros.any((e) => e.contains('String não fechada')), isTrue);
+      expect(lexer.listaErrosEstruturados.any((e) => e.mensagem.contains('String não fechada')), isTrue);
     });
 
     test('deve detectar caracteres inválidos', () {
@@ -102,7 +102,7 @@ void main() {
       final tokens = lexer.analisar();
       
       expect(lexer.temErros, isTrue);
-      expect(lexer.listaErros.any((e) => e.contains('Caractere inválido')), isTrue);
+      expect(lexer.listaErrosEstruturados.any((e) => e.mensagem.contains('Caractere inválido')), isTrue);
     });
 
     test('deve detectar números malformados', () {
@@ -120,12 +120,13 @@ void main() {
       final tokens = lexer.analisar();
       
       final intToken = tokens.firstWhere((t) => t.lexema == 'int');
-      expect(intToken.linha, equals(1));
-      expect(intToken.coluna, equals(4));
-      
-      final xToken = tokens.firstWhere((t) => t.lexema == 'x');
-      expect(xToken.linha, equals(1));
-      expect(xToken.coluna, equals(6));
+  expect(intToken.linha, equals(1));
+  // agora coluna representa a posição inicial do token (base 1)
+  expect(intToken.coluna, equals(1));
+
+  final xToken = tokens.firstWhere((t) => t.lexema == 'x');
+  expect(xToken.linha, equals(1));
+  expect(xToken.coluna, equals(5));
     });
 
     test('deve rastrear quebras de linha corretamente', () {
@@ -134,7 +135,7 @@ void main() {
       
       final yToken = tokens.firstWhere((t) => t.lexema == 'y');
       expect(yToken.linha, equals(2));
-      expect(yToken.coluna, equals(6));
+  expect(yToken.coluna, equals(5));
     });
   });
 

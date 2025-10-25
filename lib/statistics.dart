@@ -1,9 +1,10 @@
 import 'token.dart';
+import 'lex_error.dart';
 
 /// Classe responsável pelas estatísticas e relatórios do lexer
 class Statistics {
   final List<Token> tokens;
-  final List<String> erros;
+  final List<LexError> erros;
   final int linhasProcessadas;
 
   Statistics(this.tokens, this.erros, this.linhasProcessadas);
@@ -17,7 +18,7 @@ class Statistics {
     
     return {
       'totalTokens': tokens.length,
-      'totalErros': erros.length,
+  'totalErros': erros.length,
       'contadores': contadores,
       'linhasProcessadas': linhasProcessadas,
     };
@@ -34,7 +35,7 @@ class Statistics {
     if (erros.isNotEmpty) {
       print('ERROS ENCONTRADOS:');
       for (final erro in erros) {
-        print('  - $erro');
+        print('  - ${erro.toString()}');
       }
       print('');
     }
@@ -50,7 +51,7 @@ class Statistics {
     return {
       'totalErros': erros.length,
       'temErros': erros.isNotEmpty,
-      'erros': List.from(erros),
+      'erros': erros.map((e) => e.toString()).toList(),
     };
   }
 

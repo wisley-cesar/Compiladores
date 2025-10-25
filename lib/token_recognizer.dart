@@ -1,35 +1,22 @@
 import 'token.dart';
+import 'lexical_definitions.dart';
+import 'error_handler.dart';
 
 /// Classe responsável pelo reconhecimento de tokens específicos
 class TokenRecognizer {
   final String codigo;
+  final ErrorHandler? errorHandler;
   int pos = 0;
   int linha = 1;
   int coluna = 1;
   final List<Token> tokens = [];
 
-  /// Conjunto de palavras reservadas da linguagem
-  static const palavrasReservadas = {
-    'if', 'else', 'while', 'for', 'do', 'break', 'continue',
-    'int', 'float', 'double', 'string', 'bool', 'char',
-    'return', 'void', 'main', 'true', 'false', 'null',
-    'class', 'public', 'private', 'static', 'final',
-    'import', 'package', 'new', 'this', 'super'
-  };
+  /// Usa definições centralizadas
+  static const palavrasReservadas = PALAVRAS_RESERVADAS;
+  static const operadores = OPERADORES;
+  static const simbolos = SIMBOLOS;
 
-  /// Operadores unários e binários
-  static const operadores = {
-    '+', '-', '*', '/', '%', '=', '==', '!=', '<', '>', '<=', '>=',
-    '&&', '||', '!', '++', '--', '+=', '-=', '*=', '/=',
-    '&', '|', '^', '~', '<<', '>>', '>>>'
-  };
-
-  /// Símbolos especiais
-  static const simbolos = {
-    '(', ')', '{', '}', '[', ']', ';', ',', '.', ':', '?', '->'
-  };
-
-  TokenRecognizer(this.codigo);
+  TokenRecognizer(this.codigo, [this.errorHandler]);
 
   /// Adiciona um token à lista de tokens
   void adicionar(TokenType tipo, String lexema, [int? linhaToken, int? colunaToken]) {
@@ -37,8 +24,15 @@ class TokenRecognizer {
   }
 
   void avancar() {
-    pos++;
-    coluna++;
+    if (pos >= codigo.length) return;
+    if (codigo[pos] == '\n') {
+      pos++;
+      linha++;
+      coluna = 1;
+    } else {
+      pos++;
+      coluna++;
+    }
   }
 
   String olharProximo() => pos + 1 < codigo.length ? codigo[pos + 1] : '';
@@ -46,53 +40,55 @@ class TokenRecognizer {
   /// Lê uma string literal entre aspas duplas
   /// Trata strings com escape sequences básicas
   void lerString() {
-    final inicio = pos;
+    final startLinha = linha;
+    final startColuna = coluna;
+    final start = pos; // índice da aspa de abertura
     avancar(); // consome a primeira aspa
-    
+
     while (pos < codigo.length && codigo[pos] != '"') {
       if (codigo[pos] == '\n') {
-        return; // String não fechada - será tratada pelo error handler
+        // String não fechada: reportar erro e retornar mantendo pos onde está
+        errorHandler?.adicionarErro('String não fechada - quebra de linha dentro da string', startLinha, startColuna, codigo, start);
+        return;
       }
-      
+
       // Tratar escape sequences básicas
       if (codigo[pos] == '\\' && pos + 1 < codigo.length) {
-        pos++; // consome a barra
-        final escapeChar = codigo[pos];
-        switch (escapeChar) {
-          case 'n': // \n
-          case 't': // \t
-          case 'r': // \r
-          case '\\': // \\
-          case '"': // \"
-            pos++;
-            break;
-          default:
-            pos++; // Escape inválido - será tratado pelo error handler
+        avancar(); // consome a barra e atualiza linha/coluna se for \n etc.
+        // Consome o caractere escapado
+        if (pos < codigo.length) {
+          avancar();
         }
       } else {
-        pos++;
+        avancar();
       }
     }
-    
+
     if (pos >= codigo.length) {
-      return; // String não fechada - será tratada pelo error handler
+      // EOF sem fechar string
+      errorHandler?.adicionarErro('String não fechada - fim de arquivo inesperado', startLinha, startColuna, codigo, start);
+      return;
     }
-    
-    avancar(); // consome a aspa de fechamento
-    final valor = codigo.substring(inicio, pos);
-    adicionar(TokenType.string, valor);
+
+    // consome a aspa de fechamento
+    avancar();
+    // extrai o conteúdo entre aspas (sem as aspas)
+    final valor = codigo.substring(start + 1, pos - 1);
+    adicionar(TokenType.string, valor, startLinha, startColuna);
   }
 
   /// Lê números inteiros e decimais
   /// Suporta notação científica básica
   void lerNumero() {
+    final startLinha = linha;
+    final startColuna = coluna;
     final inicio = pos;
-    
+
     // Parte inteira
     while (pos < codigo.length && _isDigit(codigo[pos])) {
       avancar();
     }
-    
+
     // Ponto decimal
     if (pos < codigo.length && codigo[pos] == '.') {
       if (pos + 1 < codigo.length && _isDigit(codigo[pos + 1])) {
@@ -102,107 +98,148 @@ class TokenRecognizer {
         }
       }
     }
-    
-    // Notação científica (e ou E)
+
+    // Notação científica (e ou E) - verificar lookahead antes de consumir
     if (pos < codigo.length && (codigo[pos] == 'e' || codigo[pos] == 'E')) {
-      avancar(); // consome e ou E
-      if (pos < codigo.length && (codigo[pos] == '+' || codigo[pos] == '-')) {
-        avancar(); // consome sinal do expoente
+      int look = pos + 1;
+      if (look < codigo.length && (codigo[look] == '+' || codigo[look] == '-')) {
+        look++;
       }
-      if (pos < codigo.length && _isDigit(codigo[pos])) {
+      if (look < codigo.length && _isDigit(codigo[look])) {
+        // Consumir expoente válido
+        avancar(); // consome e/E
+        if (pos < codigo.length && (codigo[pos] == '+' || codigo[pos] == '-')) {
+          avancar();
+        }
         while (pos < codigo.length && _isDigit(codigo[pos])) {
           avancar();
         }
       } else {
-        return; // Expoente inválido - será tratado pelo error handler
+        // Expoente inválido: reportar erro e avançar para evitar laço infinito
+        errorHandler?.adicionarErro('Expoente inválido em número', startLinha, startColuna, codigo, pos);
+        // consumir o 'e' e possível sinal para continuar a análise
+        avancar();
+        if (pos < codigo.length && (codigo[pos] == '+' || codigo[pos] == '-')) {
+          avancar();
+        }
       }
     }
-    
+
     final valor = codigo.substring(inicio, pos);
-    
+
     // Validar formato do número
     if (valor.isEmpty) {
-      return; // Número malformado - será tratado pelo error handler
+      errorHandler?.adicionarErro('Número malformado', startLinha, startColuna, codigo, inicio);
+      return;
     }
-    
-    adicionar(TokenType.numero, valor);
+
+    adicionar(TokenType.numero, valor, startLinha, startColuna);
   }
 
   /// Lê identificadores e palavras reservadas
   /// Também reconhece literais booleanos (true, false)
   void lerIdentificadorOuPalavraReservada() {
+    final startLinha = linha;
+    final startColuna = coluna;
     final inicio = pos;
     while (pos < codigo.length && _isLetterOrDigit(codigo[pos])) {
       avancar();
     }
     final valor = codigo.substring(inicio, pos);
-    
+
     if (palavrasReservadas.contains(valor)) {
       // Verificar se é literal booleano
       if (valor == 'true' || valor == 'false') {
-        adicionar(TokenType.booleano, valor);
+        adicionar(TokenType.booleano, valor, startLinha, startColuna);
       } else {
-        adicionar(TokenType.palavraReservada, valor);
+        adicionar(TokenType.palavraReservada, valor, startLinha, startColuna);
       }
     } else {
-      adicionar(TokenType.identificador, valor);
+      adicionar(TokenType.identificador, valor, startLinha, startColuna);
     }
   }
 
   /// Lê operadores e símbolos, tratando operadores multi-caractere
   void lerOperadorOuSimbolo() {
-    final char = codigo[pos];
-    
-    // Operadores de dois caracteres
-    if (pos + 1 < codigo.length) {
-      final doisChars = codigo.substring(pos, pos + 2);
-      if (operadores.contains(doisChars)) {
-        adicionar(TokenType.operador, doisChars);
+    final startLinha = linha;
+    final startColuna = coluna;
+    // tentar operadores/símbolos de 3, 2 e 1 caracteres (priorizar maior)
+    if (pos + 2 < codigo.length) {
+      final tres = codigo.substring(pos, pos + 3);
+      if (operadores.contains(tres) || simbolos.contains(tres)) {
+        if (operadores.contains(tres)) {
+          adicionar(TokenType.operador, tres, startLinha, startColuna);
+        } else {
+          adicionar(TokenType.simbolo, tres, startLinha, startColuna);
+        }
+        avancar();
         avancar();
         avancar();
         return;
       }
     }
-    
-    // Operadores e símbolos de um caractere
-    if (operadores.contains(char)) {
-      adicionar(TokenType.operador, char);
-    } else if (simbolos.contains(char)) {
-      adicionar(TokenType.simbolo, char);
-    } else {
-      return; // Operador inválido - será tratado pelo error handler
+
+    if (pos + 1 < codigo.length) {
+      final doisChars = codigo.substring(pos, pos + 2);
+      if (operadores.contains(doisChars) || simbolos.contains(doisChars)) {
+        if (operadores.contains(doisChars)) {
+          adicionar(TokenType.operador, doisChars, startLinha, startColuna);
+        } else {
+          adicionar(TokenType.simbolo, doisChars, startLinha, startColuna);
+        }
+        avancar();
+        avancar();
+        return;
+      }
     }
-    
-    avancar();
+
+    final char = codigo[pos];
+    if (operadores.contains(char)) {
+      adicionar(TokenType.operador, char, startLinha, startColuna);
+      avancar();
+      return;
+    } else if (simbolos.contains(char)) {
+      adicionar(TokenType.simbolo, char, startLinha, startColuna);
+      avancar();
+      return;
+    } else {
+      // operador inválido - reportar
+      errorHandler?.adicionarErro('Operador inválido: $char', linha, coluna, codigo, pos);
+      avancar();
+      return;
+    }
   }
 
   /// Ignora comentários de linha (//)
   void ignorarComentarioLinha() {
+    // assumir pos apontando para a primeira '/' do '//'
+    // consumir '//' primeiro
+    if (pos < codigo.length && codigo[pos] == '/') avancar();
+    if (pos < codigo.length && codigo[pos] == '/') avancar();
     while (pos < codigo.length && codigo[pos] != '\n') {
-      pos++;
+      avancar();
     }
+    // não consumir a quebra de linha aqui; o chamador/avancar tratará do '\n'
   }
 
   /// Ignora comentários de bloco (/* */)
   /// Retorna true se o comentário foi fechado corretamente
   bool ignorarComentarioBloco() {
-    avancar(); // '/'
-    avancar(); // '*'
+    // assumir pos apontando para a primeira '/' do '/*'
+    if (pos < codigo.length && codigo[pos] == '/') avancar();
+    if (pos < codigo.length && codigo[pos] == '*') avancar();
     bool comentarioFechado = false;
-    
+
     while (pos < codigo.length - 1) {
       if (codigo[pos] == '*' && codigo[pos + 1] == '/') {
-        pos += 2;
+        avancar();
+        avancar();
         comentarioFechado = true;
         break;
       }
-      if (codigo[pos] == '\n') {
-        linha++;
-        coluna = 1;
-      }
-      pos++;
+      avancar();
     }
-    
+
     return comentarioFechado;
   }
 

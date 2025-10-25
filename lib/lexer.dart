@@ -1,8 +1,10 @@
 import 'token.dart';
+import 'lex_error.dart';
 import 'error_handler.dart';
 import 'token_recognizer.dart';
 import 'ambiguity_detector.dart';
 import 'statistics.dart';
+import 'lexical_definitions.dart';
 
 /// Analisador léxico (Lexer) que converte código-fonte em tokens
 /// Implementa um autômato finito determinístico (AFD) para reconhecimento de tokens
@@ -19,20 +21,12 @@ class Lexer {
   late final AmbiguityDetector _ambiguityDetector;
 
   /// Operadores unários e binários
-  static const operadores = {
-    '+', '-', '*', '/', '%', '=', '==', '!=', '<', '>', '<=', '>=',
-    '&&', '||', '!', '++', '--', '+=', '-=', '*=', '/=',
-    '&', '|', '^', '~', '<<', '>>', '>>>'
-  };
-
-  /// Símbolos especiais
-  static const simbolos = {
-    '(', ')', '{', '}', '[', ']', ';', ',', '.', ':', '?', '->'
-  };
+  static const operadores = OPERADORES;
+  static const simbolos = SIMBOLOS;
 
   Lexer(this.codigo) {
     _errorHandler = ErrorHandler();
-    _tokenRecognizer = TokenRecognizer(codigo);
+    _tokenRecognizer = TokenRecognizer(codigo, _errorHandler);
     _ambiguityDetector = AmbiguityDetector(codigo);
   }
 
@@ -58,6 +52,9 @@ class Lexer {
       
       // Comentários de linha (//)
       if (char == '/' && olharProximo() == '/') {
+        _tokenRecognizer.pos = pos;
+        _tokenRecognizer.linha = linha;
+        _tokenRecognizer.coluna = coluna;
         _tokenRecognizer.ignorarComentarioLinha();
         pos = _tokenRecognizer.pos;
         continue;
@@ -193,6 +190,9 @@ class Lexer {
   /// Retorna a lista de erros encontrados
   List<String> get listaErros => _errorHandler.listaErros;
 
+  /// Retorna a lista de erros estruturados (LexError)
+  List<LexError> get listaErrosEstruturados => _errorHandler.listaLexErrors;
+
 
   // ===== Funções auxiliares para reconhecimento de caracteres =====
   
@@ -210,13 +210,13 @@ class Lexer {
 
   /// Retorna estatísticas do lexer
   Map<String, dynamic> getEstatisticas() {
-    final statistics = Statistics(tokens, _errorHandler.listaErros, linha);
+    final statistics = Statistics(tokens, _errorHandler.listaLexErrors, linha);
     return statistics.getEstatisticas();
   }
 
   /// Imprime relatório detalhado da análise léxica
   void imprimirRelatorio() {
-    final statistics = Statistics(tokens, _errorHandler.listaErros, linha);
+    final statistics = Statistics(tokens, _errorHandler.listaLexErrors, linha);
     statistics.imprimirRelatorio();
   }
 }
