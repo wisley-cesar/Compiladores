@@ -10,7 +10,11 @@ class ErrorHandler {
   void adicionarErro(String mensagem, int linha, int coluna, String codigo, int pos) {
     final snippet = _extrairContexto(codigo, pos, 20);
     final lex = LexError(mensagem, linha, coluna, snippet);
-    _erros.add(lex);
+    // Evitar duplicatas exatas de erro (mesma mensagem, posição e contexto)
+    final exists = _erros.any((e) => e.mensagem == lex.mensagem && e.linha == lex.linha && e.coluna == lex.coluna && e.contexto == lex.contexto);
+    if (!exists) {
+      _erros.add(lex);
+    }
   }
 
   /// Extrai um trecho do código ao redor da posição `pos` com `radius` caracteres

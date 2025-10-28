@@ -1,12 +1,14 @@
-import 'expr.dart';
+part of ast;
 
 class Binary extends Expr {
   final Expr left;
   final String operator;
   final Expr right;
+  final int linha;
+  final int coluna;
 
-  Binary(this.left, this.operator, this.right);
+  Binary(this.left, this.operator, this.right, this.linha, this.coluna);
 
   @override
-  T accept<T>(visitor) => visitor.visitLiteral(this); // visitor dynamic; not used in current flow
+  T accept<T>(AstVisitor<T> visitor) => visitor.visitBinary(this);
 }

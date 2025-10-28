@@ -80,4 +80,14 @@ class Token {
         return 'Token: $lexema';
     }
   }
+  
+  /// Serializa o token para um mapa (útil para exportar/JSON)
+  Map<String, dynamic> toJson() {
+    return {
+      'tipo': tipo.name,
+      'lexema': lexema,
+      'linha': linha,
+      'coluna': coluna,
+    };
+  }
 }

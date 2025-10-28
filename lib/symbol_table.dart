@@ -18,23 +18,49 @@ class Symbol {
 }
 
 class SymbolTable {
-  final Map<String, Symbol> _symbols = {};
+  /// Pilha de escopos. Cada escopo é um mapa nome -> Symbol.
+  final List<Map<String, Symbol>> _scopes = [{}];
   int _nextId = 1;
 
-  /// Adiciona um símbolo e retorna o objeto criado. Se já existe, retorna o existente.
+  /// Entra em um novo escopo (por exemplo, ao entrar em uma função ou bloco).
+  void enterScope() {
+    _scopes.add({});
+  }
+
+  /// Sai do escopo atual. Se for o escopo global, mantém-o.
+  void exitScope() {
+    if (_scopes.length > 1) _scopes.removeLast();
+  }
+
+  /// Adiciona um símbolo ao escopo atual. Se já existir no escopo atual,
+  /// lança StateError (redeclaração).
   Symbol add(String name, {String? type, bool isMutable = true}) {
-    if (_symbols.containsKey(name)) return _symbols[name]!;
+    final current = _scopes.last;
+    if (current.containsKey(name)) {
+      throw StateError('Redeclaração do símbolo "$name" no mesmo escopo');
+    }
     final s = Symbol(_nextId++, name, type: type, isMutable: isMutable);
-    _symbols[name] = s;
+    current[name] = s;
     return s;
   }
 
-  Symbol? lookup(String name) => _symbols[name];
+  /// Procura um símbolo pelo nome, navegando pelos escopos do mais interno
+  /// para o mais externo. Retorna null se não encontrado.
+  Symbol? lookup(String name) {
+    for (var i = _scopes.length - 1; i >= 0; i--) {
+      final scope = _scopes[i];
+      if (scope.containsKey(name)) return scope[name];
+    }
+    return null;
+  }
 
-  List<Symbol> get allSymbols => List.unmodifiable(_symbols.values);
+  /// Retorna todos os símbolos visíveis (do escopo global apenas para simplicidade).
+  List<Symbol> get allSymbols => List.unmodifiable(_scopes.first.values);
 
+  /// Limpa a tabela e reseta para um único escopo global vazio.
   void clear() {
-    _symbols.clear();
+    _scopes.clear();
+    _scopes.add({});
     _nextId = 1;
   }
 }

@@ -124,10 +124,10 @@ Implementa o analisador léxico com:
 # Executar o programa principal
 dart run bin/main.dart
 
-# Executar testes
-dart test
+# Executar testes (formato expandido para saída detalhada)
+dart test -r expanded
 
-# Análise de código
+# Análise estática
 dart analyze
 ```
 
@@ -161,6 +161,75 @@ void main() {
     }
   }
 }
+```
+
+### Exemplo mínimo — usar o Lexer com uma string (linha de comando)
+
+```dart
+import 'package:compilador/lexer.dart';
+
+void main() {
+  final codigo = 'uids x = (1 + 2) * 3;';
+  final lexer = Lexer(codigo);
+  final tokens = lexer.analisar();
+
+  for (final t in tokens) {
+    print(t.toString());
+  }
+}
+```
+
+Saída exemplo (lista de tokens):
+
+```
+(palavraReservada, "uids", linha: 1, col: 1)
+(identificador, "x", linha: 1, col: 6)
+(operador, "=", linha: 1, col: 8)
+(simbolo, "(", linha: 1, col: 10)
+(numero, "1", linha: 1, col: 11)
+(operador, "+", linha: 1, col: 13)
+(numero, "2", linha: 1, col: 15)
+(simbolo, ")", linha: 1, col: 16)
+(operador, "*", linha: 1, col: 18)
+(numero, "3", linha: 1, col: 20)
+(simbolo, ";", linha: 1, col: 21)
+(eof, "EOF", linha: 1, col: 22)
+```
+
+### Exemplo: ler de um arquivo e imprimir tokens + symbol table (JSON)
+
+```dart
+import 'dart:io';
+import 'dart:convert';
+import 'package:compilador/lexer.dart';
+import 'package:compilador/symbol_table.dart';
+
+void main() {
+  final path = 'examples/demo.src';
+  final src = File(path).readAsStringSync();
+
+  final lexer = Lexer(src);
+  final tokens = lexer.analisar();
+
+  for (final t in tokens) print(t);
+
+  // Supondo que o fluxo de parsing/semântica já tenha sido executado
+  // e que você tenha uma SymbolTable (aqui mostramos um exemplo simples):
+  final table = SymbolTable();
+  table.add('x', type: 'int');
+  table.add('s', type: 'string');
+
+  final jsonSymbols = jsonEncode(table.allSymbols.map((s) => s.toJson()).toList());
+  print('\nSymbol Table (JSON):');
+  print(jsonSymbols);
+}
+```
+
+Exemplo de saída (JSON):
+
+```json
+[{"id":1,"name":"x","type":"int","isMutable":true},
+ {"id":2,"name":"s","type":"string","isMutable":true}]
 ```
 
 ## Erros léxicos estruturados
@@ -375,3 +444,45 @@ Este projeto foi desenvolvido como parte de um trabalho acadêmico de compilador
 ---
 
 **Desenvolvido com ❤️ em Dart para fins educacionais**
+
+## 🧭 Descrição do Autômato Léxico (AFD)
+
+O lexer implementa uma máquina de estados (AFD-like) para reconhecer tokens. Abaixo está uma visão simplificada dos estados principais e transições.
+
+Estados principais:
+
+- start: estado inicial; decide o próximo estado com base no caractere atual
+- inNumber: reconhecendo dígitos e ponto decimal; também lida com expoentes (e/E)
+- inIdentifier: reconhecendo letras, dígitos e underscore para identificadores e palavras reservadas
+- inString: dentro de uma string entre aspas; processa escapes e detecta fim de string
+- inCommentLine: ignorando até o fim da linha
+- inCommentBlock: ignorando até encontrar */ ou EOF (erro se EOF antes de fechar)
+- operatorLookahead: tenta reconhecer operadores de 3/2/1 caracteres (prioriza maior)
+
+Diagrama simplificado (ASCII):
+
+```
+            +-------+
+            | start |
+            +---+---+
+                |
+    digits -> inNumber <- '.'? <- digits
+      |         |\
+      |         | \__ 'e'/'E' -> exponent handling
+      |         v
+    letters -> inIdentifier
+      |                 \
+      v                  '--> reserved/identifier (emit token)
+    '"' -> inString -> (escape sequences) -> '"' emit string
+    '/' -> (next=='/') inCommentLine -> consume until '\n'
+           (next=='*') inCommentBlock -> consume until '*/' or error
+    operator chars -> operatorLookahead -> emit operator token
+```
+
+Notas:
+
+- O estado operatorLookahead tenta reconhecer primeiro seqüências de 3 caracteres, depois 2 e por fim 1.
+- Strings e comentários atualizam contadores de linha/coluna para manter posições corretas.
+- Números validam formato (ponto decimal e expoente); expoente inválido gera erro léxico e consumo seguro para recuperação.
+
+Esta seção pode ser expandida com um diagrama PlantUML ou um AFD formal para documentação acadêmica.

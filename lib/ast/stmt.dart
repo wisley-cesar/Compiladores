@@ -1,3 +1,3 @@
-import 'node.dart';
+part of ast;
 
 abstract class Stmt extends AstNode {}

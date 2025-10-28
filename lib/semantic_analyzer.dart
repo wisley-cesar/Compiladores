@@ -1,14 +1,10 @@
-import 'ast/program.dart';
-import 'ast/var_decl.dart';
-import 'ast/literal.dart';
-import 'ast/identifier.dart';
-import 'ast/expr.dart';
-import 'ast/binary.dart';
-import 'ast/unary.dart';
+import 'package:compilador/ast/ast.dart';
 import 'symbol_table.dart';
+import 'semantic_error.dart';
 
 class SemanticAnalyzer {
   final SymbolTable symbols;
+  final List<SemanticError> errors = [];
 
   SemanticAnalyzer([SymbolTable? table]) : symbols = table ?? SymbolTable();
 
@@ -24,10 +20,18 @@ class SemanticAnalyzer {
   void _handleVarDecl(VarDecl decl) {
     if (decl.keyword == 'uids') {
       final inferred = _inferType(decl.initializer);
-      symbols.add(decl.name, type: inferred, isMutable: true);
+      try {
+        symbols.add(decl.name, type: inferred, isMutable: true);
+      } on StateError catch (e) {
+        errors.add(SemanticError(e.message, simbolo: decl.name, linha: decl.linha, coluna: decl.coluna));
+      }
     } else {
       // other kinds not handled yet
-      symbols.add(decl.name, type: null, isMutable: true);
+      try {
+        symbols.add(decl.name, type: null, isMutable: true);
+      } on StateError catch (e) {
+        errors.add(SemanticError(e.message, simbolo: decl.name, linha: decl.linha, coluna: decl.coluna));
+      }
     }
   }
 
@@ -36,7 +40,11 @@ class SemanticAnalyzer {
     if (expr is Literal) return expr.kind;
     if (expr is Identifier) {
       final s = symbols.lookup(expr.name);
-      return s?.type ?? 'dynamic';
+      if (s == null) {
+        errors.add(SemanticError('Uso de variável antes da declaração', simbolo: expr.name, linha: expr.linha, coluna: expr.coluna));
+        return 'dynamic';
+      }
+      return s.type ?? 'dynamic';
     }
     if (expr is Unary) {
       final opType = _inferType(expr.operand);

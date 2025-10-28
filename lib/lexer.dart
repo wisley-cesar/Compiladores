@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'token.dart';
 import 'lex_error.dart';
 import 'error_handler.dart';
@@ -28,6 +30,14 @@ class Lexer {
     _errorHandler = ErrorHandler();
     _tokenRecognizer = TokenRecognizer(codigo, _errorHandler);
     _ambiguityDetector = AmbiguityDetector(codigo);
+  }
+
+  /// Cria um Lexer lendo o conteúdo de um arquivo no caminho [path].
+  /// Lança [IOException] se não for possível ler o arquivo.
+  factory Lexer.fromFile(String path) {
+    final file = File(path);
+    final src = file.readAsStringSync();
+    return Lexer(src);
   }
 
   /// Método principal que analisa o código-fonte e retorna lista de tokens

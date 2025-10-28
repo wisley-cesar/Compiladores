@@ -1,0 +1,5 @@
+/* bloco de comentário */
+for (int i = 0; i < 3; i++) {
+  print("Iter: " + i);
+}
+uids y = 3.14;

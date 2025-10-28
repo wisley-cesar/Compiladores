@@ -1,5 +1,4 @@
-import 'node.dart';
-import 'stmt.dart';
+part of ast;
 
 class Program extends AstNode {
   final List<Stmt> statements;
