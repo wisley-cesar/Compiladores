@@ -1,12 +1,16 @@
 import 'package:compilador/ast/ast.dart';
 import 'symbol_table.dart';
 import 'semantic_error.dart';
+import 'package:compilador/error_context.dart';
 
 class SemanticAnalyzer {
   final SymbolTable symbols;
+  final String src;
   final List<SemanticError> errors = [];
 
-  SemanticAnalyzer([SymbolTable? table]) : symbols = table ?? SymbolTable();
+  /// [src] é opcional; se fornecido, será usado para preencher `contexto` nos
+  /// erros semânticos.
+  SemanticAnalyzer([SymbolTable? table, this.src = '']) : symbols = table ?? SymbolTable();
 
   SymbolTable analyze(Program program) {
     for (final s in program.statements) {
@@ -23,14 +27,14 @@ class SemanticAnalyzer {
       try {
         symbols.add(decl.name, type: inferred, isMutable: true);
       } on StateError catch (e) {
-        errors.add(SemanticError(e.message, simbolo: decl.name, linha: decl.linha, coluna: decl.coluna));
+        errors.add(SemanticError(e.message, simbolo: decl.name, linha: decl.linha, coluna: decl.coluna, contexto: extractLineContext(src, decl.linha)));
       }
     } else {
       // other kinds not handled yet
       try {
         symbols.add(decl.name, type: null, isMutable: true);
       } on StateError catch (e) {
-        errors.add(SemanticError(e.message, simbolo: decl.name, linha: decl.linha, coluna: decl.coluna));
+        errors.add(SemanticError(e.message, simbolo: decl.name, linha: decl.linha, coluna: decl.coluna, contexto: extractLineContext(src, decl.linha)));
       }
     }
   }
@@ -41,7 +45,7 @@ class SemanticAnalyzer {
     if (expr is Identifier) {
       final s = symbols.lookup(expr.name);
       if (s == null) {
-        errors.add(SemanticError('Uso de variável antes da declaração', simbolo: expr.name, linha: expr.linha, coluna: expr.coluna));
+        errors.add(SemanticError('Uso de variável antes da declaração', simbolo: expr.name, linha: expr.linha, coluna: expr.coluna, contexto: extractLineContext(src, expr.linha)));
         return 'dynamic';
       }
       return s.type ?? 'dynamic';

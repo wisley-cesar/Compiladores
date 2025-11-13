@@ -2,12 +2,16 @@ import 'package:compilador/token_stream.dart';
 import 'package:compilador/token.dart';
 import 'package:compilador/ast/ast.dart';
 import 'package:compilador/parse_error.dart';
+import 'package:compilador/error_context.dart';
 
 class Parser {
   final TokenStream tokens;
+  final String src;
   final List<ParseError> errors = [];
 
-  Parser(this.tokens);
+  /// [src] é opcional para compatibilidade; se fornecido, será usado para
+  /// preencher o campo `contexto` nos erros.
+  Parser(this.tokens, [this.src = '']);
 
   Program parseProgram() {
     final stmts = <Stmt>[];
@@ -42,16 +46,32 @@ class Parser {
     try {
       id = tokens.expect(TokenType.identificador);
     } on StateError catch (e) {
-      // registrar erro de parsing e sincronizar até ponto-e-vírgula
-      final regex = RegExp(r'linha\s*([0-9]+),\s*coluna\s*([0-9]+)');
-      final m = regex.firstMatch(e.message);
-      int? linha;
-      int? coluna;
-      if (m != null) {
-        linha = int.tryParse(m.group(1)!);
-        coluna = int.tryParse(m.group(2)!);
+      // registrar erro de parsing mais amigável: identificador esperado após 'uids'
+      final t = tokens.peek();
+      final msg = 'Esperado identificador após "uids" mas encontrado ${t.tipo} "${t.lexema}" na linha ${t.linha}, coluna ${t.coluna}';
+      errors.add(ParseError(msg, linha: t.linha, coluna: t.coluna, contexto: extractLineContext(src, t.linha)));
+      // Tentar detectar erro consequente: falta de ponto-e-vírgula
+      // Escaneia lookahead sem consumir tokens
+      bool foundSemi = false;
+      Token nextTok = tokens.peek();
+      for (var off = 0; off < 1000; off++) {
+        final t = tokens.peek(off);
+        nextTok = t;
+        if (t.tipo == TokenType.simbolo && t.lexema == ';') {
+          foundSemi = true;
+          break;
+        }
+        if (t.tipo == TokenType.palavraReservada || t.tipo == TokenType.eof) {
+          break;
+        }
       }
-      errors.add(ParseError(e.message, linha: linha, coluna: coluna));
+      if (!foundSemi) {
+        final msg2 = nextTok.tipo == TokenType.eof
+            ? 'Esperado ";" antes do fim de arquivo após declaração de variável'
+            : 'Esperado ";" antes de "${nextTok.lexema}" na linha ${nextTok.linha}, coluna ${nextTok.coluna}';
+        errors.add(ParseError(msg2, linha: nextTok.linha, coluna: nextTok.coluna, contexto: extractLineContext(src, nextTok.linha)));
+      }
+
       _synchronize();
       // retornar null para indicar declaração inválida
       return null;
@@ -70,7 +90,7 @@ class Parser {
     } else {
       // registrar erro, sincronizar e continuar
       final msg = 'Esperado ";" após declaração na linha ${semi.linha}, coluna ${semi.coluna}';
-      errors.add(ParseError(msg, linha: semi.linha, coluna: semi.coluna));
+      errors.add(ParseError(msg, linha: semi.linha, coluna: semi.coluna, contexto: extractLineContext(src, semi.linha)));
       _synchronize();
       return null;
     }
@@ -154,7 +174,7 @@ class Parser {
       } else {
         // registrar erro de parsing e sincronizar
         final msg = 'Parêntese ")" esperado na linha ${close.linha}, coluna ${close.coluna}';
-        errors.add(ParseError(msg, linha: close.linha, coluna: close.coluna));
+        errors.add(ParseError(msg, linha: close.linha, coluna: close.coluna, contexto: extractLineContext(src, close.linha)));
         _synchronize();
         return e;
       }

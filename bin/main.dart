@@ -8,6 +8,8 @@ import 'package:compilador/parser.dart';
 import 'package:compilador/semantic_analyzer.dart';
 import 'package:compilador/ast/ast.dart';
 import 'package:compilador/parse_error.dart';
+import 'package:compilador/lex_error.dart';
+import 'package:compilador/semantic_error.dart';
 
 /// Programa principal do compilador
 /// Demonstra a análise léxica de código-fonte
@@ -48,6 +50,14 @@ int a = 10;
     print(t);
   }
 
+  // Imprimir erros léxicos (se existirem) com contexto e caret
+  if (lexer.listaErrosEstruturados.isNotEmpty) {
+    print('\n=== LEXICAL ERRORS ===');
+    for (final e in lexer.listaErrosEstruturados) {
+      print(formatErrorPretty(e, src));
+    }
+  }
+
   // Opções de linha de comando
   final dumpAstJson = args.contains('--dump-ast-json');
   final dumpTokensJson = args.contains('--dump-tokens-json');
@@ -62,9 +72,17 @@ int a = 10;
 
   // Tentar construir AST e executar análise semântica (se o parser existir)
   try {
-    final stream = TokenStream(tokens);
-    final parser = Parser(stream);
-    final program = parser.parseProgram();
+  final stream = TokenStream(tokens);
+  final parser = Parser(stream, src);
+  final program = parser.parseProgram();
+
+    // Se houver erros de parse, imprima de forma amigável com contexto
+    if (parser.errors.isNotEmpty) {
+      print('\n=== PARSE ERRORS ===');
+      for (final e in parser.errors) {
+        print(formatErrorPretty(e, src));
+      }
+    }
 
     if (dumpAstJson) {
       final encoder = JsonEncoder.withIndent('  ');
@@ -73,8 +91,8 @@ int a = 10;
       print(encoder.convert(astJson));
     }
 
-    final analyzer = SemanticAnalyzer();
-    final symbolTable = analyzer.analyze(program);
+  final analyzer = SemanticAnalyzer(null, src);
+  final symbolTable = analyzer.analyze(program);
 
     print('\n=== SYMBOL TABLE (JSON) ===');
     final jsonSymbols = jsonEncode(symbolTable.allSymbols.map((s) => s.toJson()).toList());
@@ -82,7 +100,7 @@ int a = 10;
 
     if (analyzer.errors.isNotEmpty) {
       print('\n=== SEMANTIC ERRORS ===');
-      for (final e in analyzer.errors) print(e);
+      for (final e in analyzer.errors) print(formatErrorPretty(e, src));
     }
 
     if (dumpErrorsJson) {
@@ -106,8 +124,9 @@ int a = 10;
       linha = int.tryParse(match.group(1)!);
       coluna = int.tryParse(match.group(2)!);
     }
-    final p = ParseError(msg, linha: linha, coluna: coluna);
-    print('\nParser/Semantic phase failed: $p');
+  final p = ParseError(msg, linha: linha, coluna: coluna);
+  print('\nParser/Semantic phase failed:');
+  print(formatErrorPretty(p, src));
 
     if (dumpErrorsJson) {
       final encoder = JsonEncoder.withIndent('  ');
@@ -119,4 +138,60 @@ int a = 10;
   } catch (e) {
     print('\nParser/Semantic phase not available or failed: $e');
   }
+}
+
+/// Formata um erro (LexError, ParseError ou SemanticError) mostrando a linha
+/// de código com um caret (^) apontando a coluna do erro e a mensagem abaixo.
+String formatErrorPretty(Object error, String src) {
+  // Tenta extrair linha/coluna de acordo com o tipo
+  int? linha;
+  int? coluna;
+  String mensagem = error.toString();
+
+  try {
+    if (error is ParseError) {
+      linha = error.linha;
+      coluna = error.coluna;
+      mensagem = error.mensagem;
+    } else if (error is SemanticError) {
+      linha = error.linha;
+      coluna = error.coluna;
+      mensagem = error.mensagem;
+    }
+  } catch (_) {
+    // ignore
+  }
+
+  // Também tenta tratar LexError sem importar diretamente aqui
+  if (linha == null || coluna == null) {
+    // Tenta cálculos por reflexo nos campos comuns
+    try {
+      final map = (error as dynamic).toJson();
+      if (map is Map) {
+        if (map['linha'] is int) linha = map['linha'] as int;
+        if (map['coluna'] is int) coluna = map['coluna'] as int;
+        if (map['mensagem'] is String) mensagem = map['mensagem'] as String;
+      }
+    } catch (_) {}
+  }
+
+  if (linha == null || coluna == null) {
+    // Sem posição — retorna a mensagem completa
+    return mensagem;
+  }
+
+  // Extrai a linha (1-indexed)
+  final lines = src.split('\n');
+  final index = linha - 1;
+  final lineText = (index >= 0 && index < lines.length) ? lines[index] : '';
+
+  // Constrói a linha com caret. Ajusta coluna para 1..len+1
+  final caretPos = coluna.clamp(1, (lineText.length + 1));
+  final buffer = StringBuffer();
+  buffer.writeln('Linha $linha, Coluna $coluna: $mensagem');
+  buffer.writeln(lineText);
+  // Espaços antes do caret: caretPos-1 (considerando colunas 1-based)
+  buffer.writeln('${' ' * (caretPos - 1)}^');
+
+  return buffer.toString();
 }

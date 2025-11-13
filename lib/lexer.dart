@@ -94,13 +94,8 @@ class Lexer {
         _tokenRecognizer.coluna = coluna;
         
         _tokenRecognizer.lerString();
-        
-        // Verificar se string foi fechada
-        if (_tokenRecognizer.pos >= codigo.length || codigo[_tokenRecognizer.pos - 1] != '"') {
-          _errorHandler.adicionarErro('String não fechada - fim de arquivo inesperado', linha, coluna, codigo, pos);
-        }
-        
-        // Adicionar tokens reconhecidos
+        // Se o recognizer não produziu um token de string, ele já reportou o erro.
+        // Apenas adicionamos tokens reconhecidos quando existirem.
         tokens.addAll(_tokenRecognizer.tokens);
         _tokenRecognizer.tokens.clear();
         
