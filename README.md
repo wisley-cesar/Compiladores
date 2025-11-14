@@ -131,6 +131,23 @@ dart test -r expanded
 dart analyze
 ```
 
+### Exportar tokens para arquivo
+
+O CLI agora permite exportar os tokens reconhecidos para um arquivo JSON usando a flag `--tokens-out <file>`.
+
+Exemplo:
+
+```bash
+# Analisar um arquivo e mostrar tokens em JSON na saída
+dart run bin/main.dart examples/demo.src --dump-tokens-json
+
+# Analisar e gravar tokens no arquivo `out/tokens.json`
+dart run bin/main.dart examples/demo.src --tokens-out out/tokens.json
+```
+
+Se `--tokens-out` for usada, o programa criará o arquivo (com diretórios necessários) e gravará o JSON formatado dos tokens.
+
+
 ### Exemplo de Uso
 
 ```dart

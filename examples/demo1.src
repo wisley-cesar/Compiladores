@@ -5,4 +5,5 @@ int i = 42;
 uids teste = "Teste";
 string teste = 323; 
 
+// exemplo com erro intencional
 if(int i = 0 )(int i = 0)

@@ -4,6 +4,10 @@ part 'node.dart';
 part 'program.dart';
 part 'stmt.dart';
 part 'var_decl.dart';
+part 'assign.dart';
+part 'if_stmt.dart';
+part 'while_stmt.dart';
+part 'block.dart';
 part 'expr.dart';
 part 'literal.dart';
 part 'identifier.dart';
@@ -14,6 +18,10 @@ part 'unary.dart';
 abstract class AstVisitor<T> {
   T visitProgram(Program node);
   T visitVarDecl(VarDecl node);
+  T visitAssign(Assign node);
+  T visitIfStmt(IfStmt node);
+  T visitWhileStmt(WhileStmt node);
+  T visitBlock(Block node);
   T visitLiteral(Literal node);
   T visitIdentifier(Identifier node);
   T visitBinary(Binary node);
@@ -38,7 +46,45 @@ Map<String, dynamic> astToJson(AstNode node) {
       'type': 'VarDecl',
       'keyword': node.keyword,
       'name': node.name,
-      'initializer': node.initializer != null ? astToJson(node.initializer!) : null,
+      'initializer': node.initializer != null
+          ? astToJson(node.initializer!)
+          : null,
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is Assign) {
+    return {
+      'type': 'Assign',
+      'target': astToJson(node.target),
+      'value': astToJson(node.value),
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is IfStmt) {
+    return {
+      'type': 'IfStmt',
+      'condition': astToJson(node.condition),
+      'then': astToJson(node.thenBranch),
+      'else': node.elseBranch != null ? astToJson(node.elseBranch!) : null,
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is WhileStmt) {
+    return {
+      'type': 'WhileStmt',
+      'condition': astToJson(node.condition),
+      'body': astToJson(node.body),
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is Block) {
+    return {
+      'type': 'Block',
+      'statements': node.statements.map((s) => astToJson(s)).toList(),
       'linha': node.linha,
       'coluna': node.coluna,
     };

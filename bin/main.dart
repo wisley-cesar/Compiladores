@@ -2,13 +2,11 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'package:compilador/lexer.dart';
-import 'package:compilador/token.dart';
 import 'package:compilador/token_stream.dart';
 import 'package:compilador/parser.dart';
 import 'package:compilador/semantic_analyzer.dart';
 import 'package:compilador/ast/ast.dart';
 import 'package:compilador/parse_error.dart';
-import 'package:compilador/lex_error.dart';
 import 'package:compilador/semantic_error.dart';
 
 /// Programa principal do compilador
@@ -17,15 +15,20 @@ void main(List<String> args) {
   print('=== COMPILADOR - ANÁLISE LÉXICA ===\n');
 
   String src;
-  if (args.isNotEmpty) {
-    final path = args[0];
-    final file = File(path);
+  // Suporta: `dart run bin/main.dart <path> [--flags]` ou apenas flags
+  String? pathArg;
+  if (args.isNotEmpty && !args[0].startsWith('-')) {
+    pathArg = args[0];
+  }
+
+  if (pathArg != null) {
+    final file = File(pathArg);
     if (!file.existsSync()) {
-      print('Arquivo não encontrado: $path');
+      print('Arquivo não encontrado: $pathArg');
       exit(1);
     }
     src = file.readAsStringSync();
-    print('Lendo arquivo: $path\n');
+    print('Lendo arquivo: $pathArg\n');
   } else {
     // Exemplo embutido quando nenhum arquivo é passado
     src = '''
@@ -33,7 +36,9 @@ uids x = (1 + 2) * 3;
 uids s = "olá";
 int a = 10;
 ''';
-    print('Usando código de exemplo embutido. Para analisar um arquivo: dart run bin/main.dart <caminho>\n');
+    print(
+      'Usando código de exemplo embutido. Para analisar um arquivo: dart run bin/main.dart <caminho>\n',
+    );
   }
 
   print('Código de entrada:\n');
@@ -62,6 +67,43 @@ int a = 10;
   final dumpAstJson = args.contains('--dump-ast-json');
   final dumpTokensJson = args.contains('--dump-tokens-json');
   final dumpErrorsJson = args.contains('--dump-errors-json');
+  // Suporta escrever tokens em arquivo: --tokens-out <file>
+  String? tokensOutPath;
+  final tokOutIdx = args.indexOf('--tokens-out');
+  if (tokOutIdx >= 0) {
+    if (tokOutIdx + 1 < args.length) {
+      tokensOutPath = args[tokOutIdx + 1];
+    } else {
+      print(
+        'Flag --tokens-out requer um caminho de arquivo: --tokens-out <file>',
+      );
+      exit(1);
+    }
+  }
+  // Suporta escrever AST e ERRORS em arquivo: --ast-out <file> --errors-out <file>
+  String? astOutPath;
+  final astOutIdx = args.indexOf('--ast-out');
+  if (astOutIdx >= 0) {
+    if (astOutIdx + 1 < args.length) {
+      astOutPath = args[astOutIdx + 1];
+    } else {
+      print('Flag --ast-out requer um caminho de arquivo: --ast-out <file>');
+      exit(1);
+    }
+  }
+
+  String? errorsOutPath;
+  final errOutIdx = args.indexOf('--errors-out');
+  if (errOutIdx >= 0) {
+    if (errOutIdx + 1 < args.length) {
+      errorsOutPath = args[errOutIdx + 1];
+    } else {
+      print(
+        'Flag --errors-out requer um caminho de arquivo: --errors-out <file>',
+      );
+      exit(1);
+    }
+  }
 
   if (dumpTokensJson) {
     final encoder = JsonEncoder.withIndent('  ');
@@ -70,11 +112,25 @@ int a = 10;
     print(encoder.convert(jsonTokens));
   }
 
+  // Se solicitado, grava os tokens em arquivo JSON
+  if (tokensOutPath != null) {
+    try {
+      final encoder = JsonEncoder.withIndent('  ');
+      final jsonTokens = tokens.map((t) => t.toJson()).toList();
+      final outFile = File(tokensOutPath);
+      outFile.createSync(recursive: true);
+      outFile.writeAsStringSync(encoder.convert(jsonTokens));
+      print('\nTokens gravados em: $tokensOutPath');
+    } catch (e) {
+      print('Falha ao gravar tokens em $tokensOutPath: $e');
+    }
+  }
+
   // Tentar construir AST e executar análise semântica (se o parser existir)
   try {
-  final stream = TokenStream(tokens);
-  final parser = Parser(stream, src);
-  final program = parser.parseProgram();
+    final stream = TokenStream(tokens);
+    final parser = Parser(stream, src);
+    final program = parser.parseProgram();
 
     // Se houver erros de parse, imprima de forma amigável com contexto
     if (parser.errors.isNotEmpty) {
@@ -91,11 +147,26 @@ int a = 10;
       print(encoder.convert(astJson));
     }
 
-  final analyzer = SemanticAnalyzer(null, src);
-  final symbolTable = analyzer.analyze(program);
+    if (astOutPath != null) {
+      try {
+        final encoder = JsonEncoder.withIndent('  ');
+        final astJson = astToJson(program);
+        final outFile = File(astOutPath);
+        outFile.createSync(recursive: true);
+        outFile.writeAsStringSync(encoder.convert(astJson));
+        print('\nAST gravado em: $astOutPath');
+      } catch (e) {
+        print('Falha ao gravar AST em $astOutPath: $e');
+      }
+    }
+
+    final analyzer = SemanticAnalyzer(null, src);
+    final symbolTable = analyzer.analyze(program);
 
     print('\n=== SYMBOL TABLE (JSON) ===');
-    final jsonSymbols = jsonEncode(symbolTable.allSymbols.map((s) => s.toJson()).toList());
+    final jsonSymbols = jsonEncode(
+      symbolTable.allSymbols.map((s) => s.toJson()).toList(),
+    );
     print(jsonSymbols);
 
     if (analyzer.errors.isNotEmpty) {
@@ -105,12 +176,32 @@ int a = 10;
 
     if (dumpErrorsJson) {
       final encoder = JsonEncoder.withIndent('  ');
-      final lexical = lexer.listaErrosEstruturados.map((e) => e.toJson()).toList();
+      final lexical = lexer.listaErrosEstruturados
+          .map((e) => e.toJson())
+          .toList();
       final semantic = analyzer.errors.map((e) => e.toJson()).toList();
-                       final parse = parser.errors.map((e) => e.toJson()).toList();
+      final parse = parser.errors.map((e) => e.toJson()).toList();
       final out = {'lexical': lexical, 'semantic': semantic, 'parse': parse};
       print('\n=== ERRORS (JSON) ===');
       print(encoder.convert(out));
+    }
+
+    if (errorsOutPath != null) {
+      try {
+        final encoder = JsonEncoder.withIndent('  ');
+        final lexical = lexer.listaErrosEstruturados
+            .map((e) => e.toJson())
+            .toList();
+        final semantic = analyzer.errors.map((e) => e.toJson()).toList();
+        final parse = parser.errors.map((e) => e.toJson()).toList();
+        final out = {'lexical': lexical, 'semantic': semantic, 'parse': parse};
+        final outFile = File(errorsOutPath);
+        outFile.createSync(recursive: true);
+        outFile.writeAsStringSync(encoder.convert(out));
+        print('\nErrors gravados em: $errorsOutPath');
+      } catch (e) {
+        print('Falha ao gravar errors em $errorsOutPath: $e');
+      }
     }
   } on StateError catch (e) {
     // Converter StateError (lançado por TokenStream.expect / Parser) em ParseError
@@ -124,14 +215,20 @@ int a = 10;
       linha = int.tryParse(match.group(1)!);
       coluna = int.tryParse(match.group(2)!);
     }
-  final p = ParseError(msg, linha: linha, coluna: coluna);
-  print('\nParser/Semantic phase failed:');
-  print(formatErrorPretty(p, src));
+    final p = ParseError(msg, linha: linha, coluna: coluna);
+    print('\nParser/Semantic phase failed:');
+    print(formatErrorPretty(p, src));
 
     if (dumpErrorsJson) {
       final encoder = JsonEncoder.withIndent('  ');
-      final lexical = lexer.listaErrosEstruturados.map((e) => e.toJson()).toList();
-      final out = {'lexical': lexical, 'semantic': [], 'parse': [p.toJson()]};
+      final lexical = lexer.listaErrosEstruturados
+          .map((e) => e.toJson())
+          .toList();
+      final out = {
+        'lexical': lexical,
+        'semantic': [],
+        'parse': [p.toJson()],
+      };
       print('\n=== ERRORS (JSON) ===');
       print(encoder.convert(out));
     }

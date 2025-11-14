@@ -1,0 +1,41 @@
+{
+  "type": "Program",
+  "statements": [
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "a",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "10",
+        "kind": "int",
+        "linha": 1,
+        "coluna": 10
+      },
+      "linha": 1,
+      "coluna": 1
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "int",
+      "name": "b",
+      "initializer": null,
+      "linha": 2,
+      "coluna": 1
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "float",
+      "name": "c",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "1.5",
+        "kind": "double",
+        "linha": 3,
+        "coluna": 11
+      },
+      "linha": 3,
+      "coluna": 1
+    }
+  ]
+}

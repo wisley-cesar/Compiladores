@@ -1,0 +1,4 @@
+float x = 1;
+float y;
+uids a = 1;
+y = a;

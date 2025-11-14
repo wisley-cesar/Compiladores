@@ -1,0 +1,33 @@
+{
+  "type": "Program",
+  "statements": [
+    {
+      "type": "VarDecl",
+      "keyword": "int",
+      "name": "i",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "0",
+        "kind": "int",
+        "linha": 2,
+        "coluna": 14
+      },
+      "linha": 2,
+      "coluna": 6
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "y",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "3.14",
+        "kind": "double",
+        "linha": 5,
+        "coluna": 10
+      },
+      "linha": 5,
+      "coluna": 1
+    }
+  ]
+}
