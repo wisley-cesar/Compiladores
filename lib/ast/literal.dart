@@ -1,4 +1,4 @@
-part of ast;
+part of 'package:compilador/ast/ast.dart';
 
 class Literal extends Expr {
   final String lexeme;
