@@ -62,7 +62,7 @@ class ParseError {
       buf.write(' (linha: $linha, coluna: $coluna)');
     }
     if (contexto != null) {
-      buf.write('\nContexto: "${contexto}"');
+      buf.write('\nContexto: "$contexto"');
     }
     return buf.toString();
   }

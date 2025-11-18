@@ -1,4 +1,4 @@
-part of ast;
+part of 'package:compilador/ast/ast.dart';
 
 class ReturnStmt extends Stmt {
   final Expr? value;

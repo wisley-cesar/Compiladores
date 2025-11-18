@@ -423,7 +423,7 @@ class SemanticAnalyzer {
         if (!compatible) {
           errors.add(
             SemanticError(
-              'Inicializador incompatível: declarado ${declaredType}, encontrado ${initType}',
+              'Inicializador incompatível: declarado $declaredType, encontrado $initType',
               simbolo: decl.name,
               linha: decl.linha,
               coluna: decl.coluna,
@@ -464,7 +464,7 @@ class SemanticAnalyzer {
         if (!compatible) {
           errors.add(
             SemanticError(
-              'Inicializador incompatível: declarado ${declaredType}, encontrado ${initType}',
+              'Inicializador incompatível: declarado $declaredType, encontrado $initType',
               simbolo: decl.name,
               linha: decl.linha,
               coluna: decl.coluna,

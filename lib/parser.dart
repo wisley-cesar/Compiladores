@@ -101,7 +101,7 @@ class Parser {
     } else {
       errors.add(
         ParseError.expected(
-          '";"',
+          ';',
           semi,
           contexto: extractLineContext(src, semi.linha),
         ),
@@ -200,7 +200,7 @@ class Parser {
       final t = tokens.peek();
       errors.add(
         ParseError.expected(
-          '"("',
+          '"("'.replaceAll('"', '"'),
           t,
           contexto: extractLineContext(src, t.linha),
         ),
@@ -246,11 +246,7 @@ class Parser {
     } else {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '\";\"',
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected(';', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;

@@ -1,4 +1,4 @@
-part of ast;
+part of 'package:compilador/ast/ast.dart';
 
 class WhileStmt extends Stmt {
   final Expr condition;

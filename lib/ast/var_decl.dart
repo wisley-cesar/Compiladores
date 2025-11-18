@@ -1,4 +1,4 @@
-part of ast;
+part of 'package:compilador/ast/ast.dart';
 
 class VarDecl extends Stmt {
   final String keyword; // e.g., 'uids' or other
