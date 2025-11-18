@@ -1,5 +1,3 @@
-library ast;
-
 part 'node.dart';
 part 'program.dart';
 part 'stmt.dart';

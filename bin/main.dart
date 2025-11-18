@@ -43,7 +43,8 @@ int a = 10;
 
   print('Código de entrada:\n');
   print(src);
-  print('\n' + '=' * 50 + '\n');
+  final separator = '=' * 50;
+  print('\n$separator\n');
 
   // Executar lexer
   final lexer = Lexer(src);
@@ -171,7 +172,9 @@ int a = 10;
 
     if (analyzer.errors.isNotEmpty) {
       print('\n=== SEMANTIC ERRORS ===');
-      for (final e in analyzer.errors) print(formatErrorPretty(e, src));
+      for (final e in analyzer.errors) {
+        print(formatErrorPretty(e, src));
+      }
     }
 
     if (dumpErrorsJson) {

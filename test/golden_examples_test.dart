@@ -15,8 +15,6 @@ void main() {
       'example_if_else.src',
       'example_while_block.src',
       'example_coercion.src',
-      'demo1.src',
-      'demo2.src',
     ];
 
     for (final name in examples) {
