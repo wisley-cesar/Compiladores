@@ -1,0 +1,41 @@
+name: CI - Analyze & Test
+
+on:
+  push:
+    branches: [ main, sintatica ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 'stable'
+
+      - name: Cache Pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Format check
+        run: dart format --output=none .
+
+      - name: Static analysis
+        run: dart analyze
+
+      - name: Run tests
+        run: dart test --reporter expanded

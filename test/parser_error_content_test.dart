@@ -36,11 +36,11 @@ void main() {
     parser.parseProgram();
 
     final err = parser.errors.firstWhere(
-      (e) => e.esperado == '\";\"',
+      (e) => e.esperado == ';',
       orElse: () => parser.errors.first,
     );
 
-    expect(err.esperado, '\";\"');
+    expect(err.esperado, ';');
     expect(err.recebido, contains('Fim de arquivo'));
     expect(err.linha, isNotNull);
   });

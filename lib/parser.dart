@@ -171,7 +171,7 @@ class Parser {
       } else {
         errors.add(
           ParseError.expected(
-            '";"',
+            ';',
             semi,
             contexto: extractLineContext(src, semi.linha),
           ),
@@ -199,11 +199,7 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '"("'.replaceAll('"', '"'),
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected('(', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;
@@ -264,11 +260,7 @@ class Parser {
         tokens.peek().lexema == ')')) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '\")\"',
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected(')', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;
@@ -305,7 +297,7 @@ class Parser {
     } else {
       errors.add(
         ParseError.expected(
-          '\";\"',
+          ';',
           semi,
           contexto: extractLineContext(src, semi.linha),
         ),
@@ -334,8 +326,8 @@ class Parser {
 
     // function name
     Token nameTok = tokens.peek();
-    if (nameTok.tipo == TokenType.identificador ||
-        nameTok.tipo == TokenType.palavraReservada) {
+    // Function name must be an identifier; reserved words are not allowed
+    if (nameTok.tipo == TokenType.identificador) {
       tokens.next();
     } else {
       final t = tokens.peek();
@@ -356,11 +348,7 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '\"(\"',
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected('(', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;
@@ -416,11 +404,7 @@ class Parser {
     } else {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '\")\"',
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected(')', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;
@@ -481,7 +465,7 @@ class Parser {
     } else {
       errors.add(
         ParseError.expected(
-          '";"',
+          ';',
           semi,
           contexto: extractLineContext(src, semi.linha),
         ),
@@ -506,11 +490,7 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '"("',
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected('(', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;
@@ -522,11 +502,7 @@ class Parser {
         tokens.peek().lexema == ')')) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '")"',
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected(')', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;
@@ -563,11 +539,7 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '"("',
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected('(', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;
@@ -577,11 +549,7 @@ class Parser {
         tokens.peek().lexema == ')')) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(
-          '")"',
-          t,
-          contexto: extractLineContext(src, t.linha),
-        ),
+        ParseError.expected(')', t, contexto: extractLineContext(src, t.linha)),
       );
       _synchronize();
       return null;
@@ -678,7 +646,7 @@ class Parser {
         } else {
           errors.add(
             ParseError.expected(
-              '";"',
+              ';',
               nextTok,
               contexto: extractLineContext(src, nextTok.linha),
             ),
@@ -705,7 +673,7 @@ class Parser {
       // registrar erro, sincronizar e continuar
       errors.add(
         ParseError.expected(
-          '";"',
+          ';',
           semi,
           contexto: extractLineContext(src, semi.linha),
         ),
@@ -883,7 +851,7 @@ class Parser {
           final close = tokens.peek();
           errors.add(
             ParseError.expected(
-              '")"',
+              ')',
               close,
               contexto: extractLineContext(src, close.linha),
             ),

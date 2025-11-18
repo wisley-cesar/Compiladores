@@ -1,4 +1,4 @@
-/// Classe responsável pelo tratamento de erros léxicos
+// Classe responsável pelo tratamento de erros léxicos
 import 'lex_error.dart';
 
 class ErrorHandler {

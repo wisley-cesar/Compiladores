@@ -8,7 +8,9 @@ void main() {
   final lexer = Lexer(src);
   final tokens = lexer.analisar();
   print('Tokens:');
-  for (var t in tokens) print(t);
+  for (var t in tokens) {
+    print(t);
+  }
   final stream = TokenStream(tokens);
   final parser = Parser(stream);
   final program = parser.parseProgram();
@@ -16,7 +18,9 @@ void main() {
   final analyzer = SemanticAnalyzer();
   final table = analyzer.analyze(program);
   print('Symbols count: ${table.allSymbols.length}');
-  for (var s in table.allSymbols) print(s.toJson());
+  for (var s in table.allSymbols) {
+    print(s.toJson());
+  }
   print('Parser errors: ${parser.errors.length}');
   print('Analyzer errors: ${analyzer.errors.length}');
 }
