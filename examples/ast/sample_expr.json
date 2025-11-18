@@ -1,0 +1,85 @@
+{
+  "type": "Program",
+  "statements": [
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "a",
+      "initializer": {
+        "type": "Binary",
+        "operator": "+",
+        "left": {"type": "Literal", "lexeme": "1", "kind": "int", "linha": 1, "coluna": 10},
+        "right": {
+          "type": "Binary",
+          "operator": "*",
+          "left": {"type": "Literal", "lexeme": "2", "kind": "int", "linha": 1, "coluna": 14},
+          "right": {"type": "Literal", "lexeme": "3", "kind": "int", "linha": 1, "coluna": 18},
+          "linha": 1,
+          "coluna": 16
+        },
+        "linha": 1,
+        "coluna": 12
+      },
+      "linha": 1,
+      "coluna": 1
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "b",
+      "initializer": {
+        "type": "Binary",
+        "operator": "*",
+        "left": {
+          "type": "Binary",
+          "operator": "+",
+          "left": {"type": "Literal", "lexeme": "1", "kind": "int", "linha": 2, "coluna": 10},
+          "right": {"type": "Literal", "lexeme": "2", "kind": "int", "linha": 2, "coluna": 14},
+          "linha": 2,
+          "coluna": 12
+        },
+        "right": {"type": "Literal", "lexeme": "3", "kind": "int", "linha": 2, "coluna": 19},
+        "linha": 2,
+        "coluna": 16
+      },
+      "linha": 2,
+      "coluna": 1
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "c",
+      "initializer": {
+        "type": "Binary",
+        "operator": "||",
+        "left": {
+          "type": "Binary",
+          "operator": "&&",
+          "left": {"type": "Literal", "lexeme": "true", "kind": "bool", "linha": 3, "coluna": 10},
+          "right": {"type": "Literal", "lexeme": "false", "kind": "bool", "linha": 3, "coluna": 17},
+          "linha": 3,
+          "coluna": 14
+        },
+        "right": {"type": "Literal", "lexeme": "true", "kind": "bool", "linha": 3, "coluna": 26},
+        "linha": 3,
+        "coluna": 20
+      },
+      "linha": 3,
+      "coluna": 1
+    },
+    {
+      "type": "Assign",
+      "target": {"type": "Identifier", "name": "a", "linha": 4, "coluna": 1},
+      "value": {
+        "type": "Binary",
+        "operator": "/",
+        "left": {"type": "Identifier", "name": "b", "linha": 4, "coluna": 5},
+        "right": {"type": "Literal", "lexeme": "2", "kind": "int", "linha": 4, "coluna": 11},
+        "linha": 4,
+        "coluna": 7
+      },
+      "linha": 4,
+      "coluna": 1
+    }
+  ]
+}

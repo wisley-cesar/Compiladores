@@ -2,10 +2,11 @@
 /// Esta é uma implementação inicial: adicione escopos aninhados quando for necessário.
 
 class Symbol {
-  final int id;            // UID interno
-  final String name;       // nome do símbolo (lexema)
-  String? type;            // tipo inferido ou declarado (ex: 'int', 'string', or null/unknown)
-  final bool isMutable;    // exemplo: true se variável mutável
+  final int id; // UID interno
+  final String name; // nome do símbolo (lexema)
+  String?
+  type; // tipo inferido ou declarado (ex: 'int', 'string', or null/unknown)
+  final bool isMutable; // exemplo: true se variável mutável
 
   Symbol(this.id, this.name, {this.type, this.isMutable = true});
 
@@ -52,6 +53,11 @@ class SymbolTable {
       if (scope.containsKey(name)) return scope[name];
     }
     return null;
+  }
+
+  /// Retorna o símbolo no escopo atual (sem procurar em escopos externos).
+  Symbol? currentScopeLookup(String name) {
+    return _scopes.last[name];
   }
 
   /// Retorna todos os símbolos visíveis (do escopo global apenas para simplicidade).

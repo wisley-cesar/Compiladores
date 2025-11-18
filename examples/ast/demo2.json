@@ -2,18 +2,24 @@
   "type": "Program",
   "statements": [
     {
-      "type": "VarDecl",
-      "keyword": "int",
-      "name": "i",
-      "initializer": {
-        "type": "Literal",
-        "lexeme": "0",
-        "kind": "int",
-        "linha": 2,
-        "coluna": 14
-      },
-      "linha": 2,
-      "coluna": 6
+      "type": "Block",
+      "statements": [
+        {
+          "type": "ExprStmt",
+          "expr": {
+            "type": "Call",
+            "callee": { "type": "Identifier", "name": "print" },
+            "args": [
+              {
+                "type": "Binary",
+                "operator": "+",
+                "left": { "type": "Literal", "lexeme": "Iter: ", "kind": "string" },
+                "right": { "type": "Identifier", "name": "i" }
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "type": "VarDecl",
@@ -22,12 +28,8 @@
       "initializer": {
         "type": "Literal",
         "lexeme": "3.14",
-        "kind": "double",
-        "linha": 5,
-        "coluna": 10
-      },
-      "linha": 5,
-      "coluna": 1
+        "kind": "double"
+      }
     }
   ]
 }

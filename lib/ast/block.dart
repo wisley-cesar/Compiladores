@@ -1,4 +1,4 @@
-part of ast;
+part of 'package:compilador/ast/ast.dart';
 
 class Block extends Stmt {
   final List<Stmt> statements;

@@ -13,6 +13,11 @@ part 'literal.dart';
 part 'identifier.dart';
 part 'binary.dart';
 part 'unary.dart';
+part 'for_stmt.dart';
+part 'return_stmt.dart';
+part 'function_decl.dart';
+part 'call.dart';
+part 'expr_stmt.dart';
 
 /// Visitor tipado para os nós do AST
 abstract class AstVisitor<T> {
@@ -26,6 +31,11 @@ abstract class AstVisitor<T> {
   T visitIdentifier(Identifier node);
   T visitBinary(Binary node);
   T visitUnary(Unary node);
+  T visitFor(ForStmt node);
+  T visitReturn(ReturnStmt node);
+  T visitFunctionDecl(FunctionDecl node);
+  T visitCall(Call node);
+  T visitExprStmt(ExprStmt node);
 }
 
 /// Nó base do AST
@@ -121,6 +131,56 @@ Map<String, dynamic> astToJson(AstNode node) {
       'type': 'Unary',
       'operator': node.operator,
       'operand': astToJson(node.operand),
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is ForStmt) {
+    return {
+      'type': 'ForStmt',
+      'init': node.init != null ? astToJson(node.init!) : null,
+      'condition': node.condition != null ? astToJson(node.condition!) : null,
+      'update': node.update != null ? astToJson(node.update!) : null,
+      'body': astToJson(node.body),
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is ReturnStmt) {
+    return {
+      'type': 'ReturnStmt',
+      'value': node.value != null ? astToJson(node.value!) : null,
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is FunctionDecl) {
+    return {
+      'type': 'FunctionDecl',
+      'modifiers': node.modifiers,
+      'returnType': node.returnType,
+      'name': node.name,
+      'params': node.params
+          .map((p) => {'type': p.type, 'name': p.name})
+          .toList(),
+      'body': astToJson(node.body),
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is Call) {
+    return {
+      'type': 'Call',
+      'callee': astToJson(node.callee),
+      'args': node.args.map((a) => astToJson(a)).toList(),
+      'linha': node.linha,
+      'coluna': node.coluna,
+    };
+  }
+  if (node is ExprStmt) {
+    return {
+      'type': 'ExprStmt',
+      'expr': astToJson(node.expr),
       'linha': node.linha,
       'coluna': node.coluna,
     };

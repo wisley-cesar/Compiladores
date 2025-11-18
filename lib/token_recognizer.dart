@@ -12,14 +12,19 @@ class TokenRecognizer {
   final List<Token> tokens = [];
 
   /// Usa definições centralizadas
-  static const palavrasReservadas = PALAVRAS_RESERVADAS;
-  static const operadores = OPERADORES;
-  static const simbolos = SIMBOLOS;
+  static const palavrasReservadas = palavrasReservadasSet;
+  static const operadores = operadoresSet;
+  static const simbolos = simbolosSet;
 
   TokenRecognizer(this.codigo, [this.errorHandler]);
 
   /// Adiciona um token à lista de tokens
-  void adicionar(TokenType tipo, String lexema, [int? linhaToken, int? colunaToken]) {
+  void adicionar(
+    TokenType tipo,
+    String lexema, [
+    int? linhaToken,
+    int? colunaToken,
+  ]) {
     tokens.add(Token(tipo, lexema, linhaToken ?? linha, colunaToken ?? coluna));
   }
 
@@ -48,7 +53,13 @@ class TokenRecognizer {
     while (pos < codigo.length && codigo[pos] != '"') {
       if (codigo[pos] == '\n') {
         // String não fechada: reportar erro e retornar mantendo pos onde está
-        errorHandler?.adicionarErro('String não fechada - quebra de linha dentro da string', startLinha, startColuna, codigo, start);
+        errorHandler?.adicionarErro(
+          'String não fechada - quebra de linha dentro da string',
+          startLinha,
+          startColuna,
+          codigo,
+          start,
+        );
         return;
       }
 
@@ -66,7 +77,13 @@ class TokenRecognizer {
 
     if (pos >= codigo.length) {
       // EOF sem fechar string
-      errorHandler?.adicionarErro('String não fechada - fim de arquivo inesperado', startLinha, startColuna, codigo, start);
+      errorHandler?.adicionarErro(
+        'String não fechada - fim de arquivo inesperado',
+        startLinha,
+        startColuna,
+        codigo,
+        start,
+      );
       return;
     }
 
@@ -102,7 +119,8 @@ class TokenRecognizer {
     // Notação científica (e ou E) - verificar lookahead antes de consumir
     if (pos < codigo.length && (codigo[pos] == 'e' || codigo[pos] == 'E')) {
       int look = pos + 1;
-      if (look < codigo.length && (codigo[look] == '+' || codigo[look] == '-')) {
+      if (look < codigo.length &&
+          (codigo[look] == '+' || codigo[look] == '-')) {
         look++;
       }
       if (look < codigo.length && _isDigit(codigo[look])) {
@@ -116,7 +134,13 @@ class TokenRecognizer {
         }
       } else {
         // Expoente inválido: reportar erro e avançar para evitar laço infinito
-        errorHandler?.adicionarErro('Expoente inválido em número', startLinha, startColuna, codigo, pos);
+        errorHandler?.adicionarErro(
+          'Expoente inválido em número',
+          startLinha,
+          startColuna,
+          codigo,
+          pos,
+        );
         // consumir o 'e' e possível sinal para continuar a análise
         avancar();
         if (pos < codigo.length && (codigo[pos] == '+' || codigo[pos] == '-')) {
@@ -129,7 +153,13 @@ class TokenRecognizer {
 
     // Validar formato do número
     if (valor.isEmpty) {
-      errorHandler?.adicionarErro('Número malformado', startLinha, startColuna, codigo, inicio);
+      errorHandler?.adicionarErro(
+        'Número malformado',
+        startLinha,
+        startColuna,
+        codigo,
+        inicio,
+      );
       return;
     }
 
@@ -204,7 +234,13 @@ class TokenRecognizer {
       return;
     } else {
       // operador inválido - reportar
-      errorHandler?.adicionarErro('Operador inválido: $char', linha, coluna, codigo, pos);
+      errorHandler?.adicionarErro(
+        'Operador inválido: $char',
+        linha,
+        coluna,
+        codigo,
+        pos,
+      );
       avancar();
       return;
     }
@@ -244,10 +280,10 @@ class TokenRecognizer {
   }
 
   // ===== Funções auxiliares para reconhecimento de caracteres =====
-  
+
   /// Verifica se o caractere é um dígito
   bool _isDigit(String c) => RegExp(r'[0-9]').hasMatch(c);
-  
+
   /// Verifica se o caractere é letra, dígito ou underscore
   bool _isLetterOrDigit(String c) => RegExp(r'[a-zA-Z0-9_]').hasMatch(c);
 }

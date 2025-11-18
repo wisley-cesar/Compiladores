@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:compilador/lexer.dart';
 import 'package:compilador/token.dart';
+
 void main() {
   group('Lexer básico', () {
     test('Reconhece palavras reservadas, identificador, número e símbolos', () {

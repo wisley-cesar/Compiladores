@@ -8,17 +8,41 @@ void main() {
       final lexer = Lexer('uids x = 10;');
       final tokens = lexer.analisar();
 
-      expect(tokens.any((t) => t.tipo == TokenType.palavraReservada && t.lexema == 'uids'), isTrue);
-      expect(tokens.any((t) => t.tipo == TokenType.identificador && t.lexema == 'x'), isTrue);
-      expect(tokens.any((t) => t.tipo == TokenType.numero && t.lexema == '10'), isTrue);
+      expect(
+        tokens.any(
+          (t) => t.tipo == TokenType.palavraReservada && t.lexema == 'uids',
+        ),
+        isTrue,
+      );
+      expect(
+        tokens.any((t) => t.tipo == TokenType.identificador && t.lexema == 'x'),
+        isTrue,
+      );
+      expect(
+        tokens.any((t) => t.tipo == TokenType.numero && t.lexema == '10'),
+        isTrue,
+      );
     });
 
-    test('reconhece uids sem inicializador (aceito no léxico, semântica decide)', () {
-      final lexer = Lexer('uids y;');
-      final tokens = lexer.analisar();
+    test(
+      'reconhece uids sem inicializador (aceito no léxico, semântica decide)',
+      () {
+        final lexer = Lexer('uids y;');
+        final tokens = lexer.analisar();
 
-      expect(tokens.any((t) => t.tipo == TokenType.palavraReservada && t.lexema == 'uids'), isTrue);
-      expect(tokens.any((t) => t.tipo == TokenType.identificador && t.lexema == 'y'), isTrue);
-    });
+        expect(
+          tokens.any(
+            (t) => t.tipo == TokenType.palavraReservada && t.lexema == 'uids',
+          ),
+          isTrue,
+        );
+        expect(
+          tokens.any(
+            (t) => t.tipo == TokenType.identificador && t.lexema == 'y',
+          ),
+          isTrue,
+        );
+      },
+    );
   });
 }

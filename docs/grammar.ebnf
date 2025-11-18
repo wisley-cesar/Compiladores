@@ -1,83 +1,79 @@
-(* Gramática EBNF esqueleto para a linguagem do compilador *).
-(* Produzida automaticamente a partir das palavras reservadas e símbolos do projeto. *)
+(* Gramática EBNF usada pelo parser deste projeto. *)
 
-(* Notas:
-   - Esta gramática é um ponto de partida: refine precedências, associatividade e regras
-     de declaração conforme suas necessidades.
-   - Tokens lexicais (IDENT, NUMBER, STRING, etc.) são definidos na seção "Lexical" abaixo.
+(* Observações relevantes:
+   - O parser é manual (recursivo-descendente) e aceita declarações de variável
+     com inicializador opcional (ex.: `int x = 1;`).
+   - O parser aceita declarações em qualquer posição (top-level ou dentro de blocos).
+     A política de uso/declaração (declare-before-use) é aplicada pelo analisador semântico
+     para variáveis locais; existe uma etapa opcional de pré-varredura para declarações
+     top-level se desejado.
    - Comentários (//, /* */) e espaços são ignorados pelo lexer.
 *)
 
-program       ::= { topLevelDecl } ;
+program ::= { declaration_or_statement } ;
 
-// Declarações de topo: variáveis ou funções
-topLevelDecl  ::= functionDecl | varDecl | statement ;
+(* O parser aceita uma sequência arbitrária de declarações e statements;
+  isto cobre tanto o caso Gramática: Programa -> Declarações Comandos
+  quanto o estilo permissivo (declarações intercaladas). *)
+
+declaration_or_statement ::= declaration | statement ;
 
 functionDecl  ::= 'public'? 'static'? type IDENT '(' [ paramList ] ')' block ;
 paramList     ::= param { ',' param } ;
 param         ::= type IDENT ;
 
-// Declaração de variável pode ser com tipo explícito ou com 'uids' para inferência
-// Nota: para declarações com 'uids' recomendamos exigir inicializador para permitir inferência;
-// a gramática abaixo aceita ambos, a verificação de presença do inicializador é feita no analisador semântico.
-varDecl       ::= type IDENT [ '=' expression ] ';'
-                | 'uids' IDENT [ '=' expression ] ';' ;
+(* Declaração de variável: suportamos tipo explícito ou a keyword especial `uids`
+  (inferência). Inicializador é opcional — o analisador semântico fará checagens
+  de compatibilidade de tipo e possíveis avisos de coerção. *)
+varDecl ::= type IDENT [ '=' expression ] ';' | 'uids' IDENT [ '=' expression ] ';' ;
 
 // Tipos básicos
-type          ::= 'int' | 'float' | 'double' | 'string' | 'bool' | 'void' | IDENT ;
+type ::= 'int' | 'float' | 'double' | 'string' | 'bool' ;
 
 // Blocos e statements
-block         ::= '{' { statement } '}' ;
-statement     ::= block
-                 | ifStmt
-                 | whileStmt
-                 | forStmt
-                 | returnStmt
-                 | exprStmt
-                 | varDecl
-                 | ';' ;
+block ::= '{' { declaration_or_statement } '}' ;
 
-ifStmt        ::= 'if' '(' expression ')' statement [ 'else' statement ] ;
-whileStmt     ::= 'while' '(' expression ')' statement ;
-forStmt       ::= 'for' '(' [ forInit ] ';' [ expression ] ';' [ expression ] ')' statement ;
-forInit       ::= varDecl | exprStmt ;
-returnStmt    ::= 'return' [ expression ] ';' ;
-exprStmt      ::= expression ';' ;
+statement ::= block
+            | ifStmt
+            | whileStmt
+            | forStmt
+            | returnStmt
+            | exprStmt
+            | varDecl
+            | ';' ;
+
+ifStmt ::= 'if' '(' expression ')' statement [ 'else' statement ] ;
+whileStmt ::= 'while' '(' expression ')' statement ;
+forStmt ::= 'for' '(' [ forInit ] ';' [ expression ] ';' [ expression ] ')' statement ;
+forInit ::= varDecl | exprStmt ;
+returnStmt ::= 'return' [ expression ] ';' ;
+exprStmt ::= expression ';' ;
 
 // Expressões (esqueleto com precedência sugerida)
-expression    ::= assignment ;
+expression ::= assignment ;
 
-assignment    ::= conditional [ ( '=' | '+=' | '-=' | '*=' | '/=' ) assignment ] ;
+assignment ::= conditional [ ( '=' | '+=' | '-=' | '*=' | '/=' ) assignment ] ;
 
-conditional   ::= logical_or [ '?' expression ':' conditional ] ;
+conditional ::= logical_or [ '?' expression ':' conditional ] ;
 
-logical_or    ::= logical_and { '||' logical_and } ;
-logical_and   ::= equality { '&&' equality } ;
+logical_or ::= logical_and { '||' logical_and } ;
+logical_and ::= equality { '&&' equality } ;
 
-equality      ::= relational { ( '==' | '!=' ) relational } ;
+equality ::= relational { ( '==' | '!=' ) relational } ;
 
-relational    ::= shift { ( '<' | '>' | '<=' | '>=' ) shift } ;
+relational ::= additive { ( '<' | '>' | '<=' | '>=' ) additive } ;
 
-shift         ::= additive { ( '<<' | '>>' | '>>>' ) additive } ;
-
-additive      ::= multiplicative { ( '+' | '-' ) multiplicative } ;
+additive ::= multiplicative { ( '+' | '-' ) multiplicative } ;
 
 multiplicative ::= unary { ( '*' | '/' | '%' ) unary } ;
 
-unary         ::= ( '+' | '-' | '!' | '++' | '--' ) unary
-                 | postfix ;
+unary ::= ( '+' | '-' | '!' ) unary | primary ;
 
-postfix       ::= primary { ( '++' | '--' ) } ;
+primary ::= literal | IDENT | '(' expression ')' ;
 
-primary       ::= literal
-                 | IDENT
-                 | IDENT '(' [ argList ] ')'
-                 | '(' expression ')'
-                 ;
+argList ::= expression { ',' expression } ;
 
-argList       ::= expression { ',' expression } ;
-
-literal       ::= NUMBER | STRING | 'true' | 'false' | 'null' ;
+literal ::= NUMBER | STRING | 'true' | 'false' ;
 
 // -----------------------------------------------------------------------------
 // Lexical (tokens) - definir no lexer
@@ -110,4 +106,4 @@ literal       ::= NUMBER | STRING | 'true' | 'false' | 'null' ;
 // for (int i = 0; i < 10; i++) { print(i); }
 // -----------------------------------------------------------------------------
 
-(* Fim do esqueleto de gramática *)
+(* Fim da gramática *)
