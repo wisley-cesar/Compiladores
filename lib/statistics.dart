@@ -15,10 +15,10 @@ class Statistics {
     for (final token in tokens) {
       contadores[token.tipo] = (contadores[token.tipo] ?? 0) + 1;
     }
-    
+
     return {
       'totalTokens': tokens.length,
-  'totalErros': erros.length,
+      'totalErros': erros.length,
       'contadores': contadores,
       'linhasProcessadas': linhasProcessadas,
     };
@@ -31,7 +31,7 @@ class Statistics {
     print('Total de erros: ${erros.length}');
     print('Linhas processadas: $linhasProcessadas');
     print('');
-    
+
     if (erros.isNotEmpty) {
       print('ERROS ENCONTRADOS:');
       for (final erro in erros) {
@@ -39,7 +39,7 @@ class Statistics {
       }
       print('');
     }
-    
+
     print('TOKENS RECONHECIDOS:');
     for (final token in tokens) {
       print('  ${token.toReadableString()}');
@@ -69,11 +69,11 @@ class Statistics {
     final contadores = getContadoresTokens();
     final total = tokens.length;
     final percentuais = <TokenType, double>{};
-    
+
     for (final entry in contadores.entries) {
       percentuais[entry.key] = (entry.value / total) * 100;
     }
-    
+
     return percentuais;
   }
 }

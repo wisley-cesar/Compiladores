@@ -1,4 +1,4 @@
-part of ast;
+part of 'package:compilador/ast/ast.dart';
 
 class IfStmt extends Stmt {
   final Expr condition;
@@ -7,7 +7,13 @@ class IfStmt extends Stmt {
   final int linha;
   final int coluna;
 
-  IfStmt(this.condition, this.thenBranch, this.elseBranch, this.linha, this.coluna);
+  IfStmt(
+    this.condition,
+    this.thenBranch,
+    this.elseBranch,
+    this.linha,
+    this.coluna,
+  );
 
   @override
   T accept<T>(AstVisitor<T> visitor) => visitor.visitIfStmt(this);

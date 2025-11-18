@@ -545,6 +545,59 @@ class SemanticAnalyzer {
       final right = _inferType(expr.right);
       if (left == null || right == null) return 'dynamic';
       final op = expr.operator;
+      // assignment as expression: check target and value
+      if (op == '=') {
+        // left should be identifier (simple case)
+        if (expr.left is Identifier) {
+          final id = expr.left as Identifier;
+          final s = symbols.lookup(id.name);
+          final rightType = _inferType(expr.right);
+          if (s == null) {
+            errors.add(
+              SemanticError(
+                'Atribuição para variável não declarada',
+                simbolo: id.name,
+                linha: expr.linha,
+                coluna: expr.coluna,
+                contexto: extractLineContext(src, expr.linha),
+              ),
+            );
+            return 'dynamic';
+          }
+          final dest = s.type ?? 'dynamic';
+          final srcType = rightType ?? 'dynamic';
+          if (dest != 'dynamic' && srcType != 'dynamic') {
+            final allowed =
+                (dest == srcType) || (dest == 'double' && srcType == 'int');
+            if (!allowed) {
+              errors.add(
+                SemanticError(
+                  'Tipo incompatível na atribuição: esperado $dest, encontrado $srcType',
+                  simbolo: id.name,
+                  linha: expr.linha,
+                  coluna: expr.coluna,
+                  contexto: extractLineContext(src, expr.linha),
+                ),
+              );
+            } else if (dest == 'double' && srcType == 'int') {
+              errors.add(
+                SemanticError(
+                  'Coerção implícita int -> double na atribuição para "${id.name}"',
+                  simbolo: id.name,
+                  linha: expr.linha,
+                  coluna: expr.coluna,
+                  contexto: extractLineContext(src, expr.linha),
+                  isWarning: true,
+                ),
+              );
+            }
+          }
+          return dest;
+        }
+        // fallback: infer right side
+        return _inferType(expr.right);
+      }
+
       // logical operators -> bool
       if (op == '&&' || op == '||') return 'bool';
       // equality and relational operators -> bool
@@ -586,7 +639,11 @@ class SemanticAnalyzer {
             );
             return 'dynamic';
           }
-          // If symbol exists but is not a function, still allow (dynamic)
+          // If symbol exists and encodes fn:RET, return return type
+          if (s.type != null && s.type!.startsWith('fn:')) {
+            return s.type!.substring(3);
+          }
+          // Otherwise allow as dynamic
           return s.type ?? 'dynamic';
         }
         // check arity

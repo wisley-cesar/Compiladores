@@ -1,4 +1,4 @@
-part of ast;
+part of 'package:compilador/ast/ast.dart';
 
 class ForStmt extends Stmt {
   final Stmt? init; // varDecl or exprStmt or null

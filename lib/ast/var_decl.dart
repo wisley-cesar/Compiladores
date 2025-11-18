@@ -12,4 +12,3 @@ class VarDecl extends Stmt {
   @override
   T accept<T>(AstVisitor<T> visitor) => visitor.visitVarDecl(this);
 }
-

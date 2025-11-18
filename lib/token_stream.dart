@@ -33,7 +33,9 @@ class TokenStream {
   Token expect(TokenType tipo, [String? lexema]) {
     final t = peek();
     if (t.tipo != tipo || (lexema != null && t.lexema != lexema)) {
-      throw StateError('Token inesperado: esperado $tipo ${lexema ?? ''} mas achado ${t.tipo} "${t.lexema}" na linha ${t.linha}, coluna ${t.coluna}');
+      throw StateError(
+        'Token inesperado: esperado $tipo ${lexema ?? ''} mas achado ${t.tipo} "${t.lexema}" na linha ${t.linha}, coluna ${t.coluna}',
+      );
     }
     _pos++;
     return t;
