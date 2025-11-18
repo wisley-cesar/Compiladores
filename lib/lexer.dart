@@ -4,7 +4,6 @@ import 'token.dart';
 import 'lex_error.dart';
 import 'error_handler.dart';
 import 'token_recognizer.dart';
-import 'ambiguity_detector.dart';
 import 'statistics.dart';
 import 'lexical_definitions.dart';
 
@@ -20,7 +19,6 @@ class Lexer {
   // Componentes modulares
   late final ErrorHandler _errorHandler;
   late final TokenRecognizer _tokenRecognizer;
-  late final AmbiguityDetector _ambiguityDetector;
 
   /// Operadores unários e binários
   static const operadores = operadoresSet;
@@ -29,7 +27,6 @@ class Lexer {
   Lexer(this.codigo) {
     _errorHandler = ErrorHandler();
     _tokenRecognizer = TokenRecognizer(codigo, _errorHandler);
-    _ambiguityDetector = AmbiguityDetector(codigo);
   }
 
   /// Cria um Lexer lendo o conteúdo de um arquivo no caminho [path].
@@ -52,11 +49,14 @@ class Lexer {
         continue;
       }
 
-      // Tratar quebras de linha
-      if (char == '\n') {
+      // Tratar quebras de linha (Unix e Windows)
+      if (char == '\n' || char == '\r') {
         linha++;
         coluna = 1;
         pos++;
+        if (char == '\r' && pos < codigo.length && codigo[pos] == '\n') {
+          pos++;
+        }
         continue;
       }
 
@@ -112,7 +112,8 @@ class Lexer {
       }
 
       // Números (inteiros e decimais)
-      if (_isDigit(char)) {
+      if (_isDigit(char) ||
+          (char == '.' && _isDigit(olharProximo()))) {
         _tokenRecognizer.pos = pos;
         _tokenRecognizer.linha = linha;
         _tokenRecognizer.coluna = coluna;
@@ -154,12 +155,6 @@ class Lexer {
         _tokenRecognizer.coluna = coluna;
 
         _tokenRecognizer.lerOperadorOuSimbolo();
-
-        // Detectar ambiguidades
-        _ambiguityDetector.atualizarPosicao(pos, linha, coluna);
-        _ambiguityDetector.detectarAmbiguidades(char, (mensagem) {
-          _errorHandler.adicionarErro(mensagem, linha, coluna, codigo, pos);
-        });
 
         // Adicionar tokens reconhecidos
         tokens.addAll(_tokenRecognizer.tokens);

@@ -8,6 +8,7 @@ import 'package:compilador/semantic_analyzer.dart';
 import 'package:compilador/ast/ast.dart';
 import 'package:compilador/parse_error.dart';
 import 'package:compilador/semantic_error.dart';
+import 'package:compilador/bytecode_generator.dart';
 
 /// Programa principal do compilador
 /// Demonstra a análise léxica de código-fonte
@@ -67,6 +68,8 @@ int a = 10;
   final dumpAstJson = args.contains('--dump-ast-json');
   final dumpTokensJson = args.contains('--dump-tokens-json');
   final dumpErrorsJson = args.contains('--dump-errors-json');
+  final dumpBytecode = args.contains('--dump-bytecode');
+  final dumpBytecodeJson = args.contains('--dump-bytecode-json');
   // Suporta escrever tokens em arquivo: --tokens-out <file>
   String? tokensOutPath;
   final tokOutIdx = args.indexOf('--tokens-out');
@@ -172,6 +175,30 @@ int a = 10;
     if (analyzer.errors.isNotEmpty) {
       print('\n=== SEMANTIC ERRORS ===');
       for (final e in analyzer.errors) print(formatErrorPretty(e, src));
+    }
+
+    // Geração de bytecode
+    if (dumpBytecode || dumpBytecodeJson) {
+      final generator = BytecodeGenerator(symbolTable);
+      final bytecode = generator.generate(program);
+
+      if (dumpBytecode) {
+        print('\n=== BYTECODE ===');
+        print(bytecode.toString());
+      }
+
+      if (dumpBytecodeJson) {
+        print('\n=== BYTECODE (JSON) ===');
+        final encoder = JsonEncoder.withIndent('  ');
+        print(encoder.convert(bytecode.toJson()));
+      }
+
+      if (generator.errors.isNotEmpty) {
+        print('\n=== BYTECODE GENERATION ERRORS ===');
+        for (final e in generator.errors) {
+          print(formatErrorPretty(e, src));
+        }
+      }
     }
 
     if (dumpErrorsJson) {

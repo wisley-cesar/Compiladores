@@ -162,7 +162,8 @@ class Parser {
         t.tipo == TokenType.booleano ||
         (t.tipo == TokenType.simbolo && t.lexema == '(') ||
         (t.tipo == TokenType.operador &&
-            (t.lexema == '+' || t.lexema == '-' || t.lexema == '!'))) {
+            (t.lexema == '+' || t.lexema == '-' || t.lexema == '!' ||
+                t.lexema == '++' || t.lexema == '--'))) {
       final expr = parseExpression();
       final semi = tokens.peek();
       if (semi.tipo == TokenType.simbolo && semi.lexema == ';') {
@@ -831,13 +832,38 @@ class Parser {
   Expr _parseUnary() {
     final t = tokens.peek();
     if (t.tipo == TokenType.operador &&
-        (t.lexema == '+' || t.lexema == '-' || t.lexema == '!')) {
+        (t.lexema == '+' || t.lexema == '-' || t.lexema == '!' ||
+            t.lexema == '++' || t.lexema == '--')) {
       final opTok = tokens.next();
       final op = opTok.lexema;
       final operand = _parseUnary();
       return Unary(op, operand, opTok.linha, opTok.coluna);
     }
-    return _parsePrimary();
+    return _parsePostfix();
+  }
+
+  /// Parse postfix operators (i++, i--)
+  Expr _parsePostfix() {
+    var expr = _parsePrimary();
+    
+    // Verifica operadores postfix: ++ e --
+    while (true) {
+      final t = tokens.peek();
+      if (t.tipo == TokenType.operador &&
+          (t.lexema == '++' || t.lexema == '--')) {
+        final opTok = tokens.next();
+        // Cria um Unary com operador postfix (marcado com 'post' no operador)
+        // Por enquanto, usamos o operador normal e o gerador de bytecode
+        // diferencia por contexto (se é prefixo, o operando vem depois,
+        // se é postfix, o operando já foi parseado)
+        final op = '${opTok.lexema}post'; // Marca como postfix
+        expr = Unary(op, expr, opTok.linha, opTok.coluna);
+      } else {
+        break;
+      }
+    }
+    
+    return expr;
   }
 
   Expr _parsePrimary() {

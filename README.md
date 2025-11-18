@@ -77,19 +77,12 @@ O projeto foi refatorado para seguir o princípio de **Separação de Responsabi
    - Operadores e símbolos
    - Comentários (linha e bloco)
 
-3. **`AmbiguityDetector`** - Detecção de ambiguidades
-   - Parênteses extras consecutivos
-   - Chaves extras consecutivas
-   - Colchetes extras consecutivos
-   - Ponto e vírgula duplo
-   - Padrões problemáticos específicos
-
-4. **`ErrorHandler`** - Tratamento de erros
+3. **`ErrorHandler`** - Tratamento de erros
    - Coleta e organiza erros léxicos
    - Fornece estatísticas de erros
    - Mantém lista de erros para relatórios
 
-5. **`Statistics`** - Estatísticas e relatórios
+4. **`Statistics`** - Estatísticas e relatórios
    - Contadores de tokens por tipo
    - Percentuais de distribuição
    - Relatórios detalhados
