@@ -20,6 +20,15 @@ class Parser {
       // If next token starts a declaration (type keyword), parse declaration
       final t = tokens.peek();
       if (_isTypeKeyword(t)) {
+        // detect function declaration: type IDENT '('
+        if ((tokens.peek(1).tipo == TokenType.identificador ||
+                tokens.peek(1).tipo == TokenType.palavraReservada) &&
+            tokens.peek(2).tipo == TokenType.simbolo &&
+            tokens.peek(2).lexema == '(') {
+          final f = parseFunctionDecl();
+          if (f != null) stmts.add(f);
+          continue;
+        }
         final d = parseDeclaration();
         if (d != null) stmts.add(d);
         continue;
@@ -50,10 +59,9 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Esperado tipo de declaração, encontrado ${t.lexema}',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          'tipo (int|float|bool|string|uids)',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -68,10 +76,9 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Esperado identificador após tipo "${kw.lexema}" mas encontrado ${t.tipo} "${t.lexema}"',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          'identificador',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -93,10 +100,9 @@ class Parser {
       tokens.next();
     } else {
       errors.add(
-        ParseError(
-          'Esperado ";" após declaração na linha ${semi.linha}, coluna ${semi.coluna}',
-          linha: semi.linha,
-          coluna: semi.coluna,
+        ParseError.expected(
+          '";"',
+          semi,
           contexto: extractLineContext(src, semi.linha),
         ),
       );
@@ -116,10 +122,27 @@ class Parser {
       return null;
     }
 
+    // Allow declarations anywhere (e.g., inside blocks) by detecting
+    // type keywords at statement start and parsing a VarDecl.
+    if (_isTypeKeyword(t)) {
+      return parseDeclaration();
+    }
+
     if (t.tipo == TokenType.palavraReservada) {
       if (t.lexema == 'if') return parseIf();
       if (t.lexema == 'while') return parseWhile();
-      // a palavra reservada pode iniciar um declaration; handle in parseProgram
+      if (t.lexema == 'for') return parseFor();
+      if (t.lexema == 'return') return parseReturn();
+      // function declarations may start with modifiers or a return type
+      if (t.lexema == 'public' || t.lexema == 'static' || _isTypeKeyword(t)) {
+        // try to parse a function declaration if looks like one
+        // We peek ahead to see identifier and '('
+        if (tokens.peek(1).tipo == TokenType.identificador &&
+            tokens.peek(2).tipo == TokenType.simbolo &&
+            tokens.peek(2).lexema == '(') {
+          return parseFunctionDecl();
+        }
+      }
     }
 
     if (t.tipo == TokenType.simbolo && t.lexema == '{') return parseBlock();
@@ -131,19 +154,295 @@ class Parser {
       return parseAssignment();
     }
 
+    // expression statement (function calls, bare expressions):
+    // allow starting tokens that can begin an expression
+    if (t.tipo == TokenType.identificador ||
+        t.tipo == TokenType.numero ||
+        t.tipo == TokenType.string ||
+        t.tipo == TokenType.booleano ||
+        (t.tipo == TokenType.simbolo && t.lexema == '(') ||
+        (t.tipo == TokenType.operador &&
+            (t.lexema == '+' || t.lexema == '-' || t.lexema == '!'))) {
+      final expr = parseExpression();
+      final semi = tokens.peek();
+      if (semi.tipo == TokenType.simbolo && semi.lexema == ';') {
+        tokens.next();
+        return ExprStmt(expr, t.linha, t.coluna);
+      } else {
+        errors.add(
+          ParseError.expected(
+            '";"',
+            semi,
+            contexto: extractLineContext(src, semi.linha),
+          ),
+        );
+        _synchronize();
+        return null;
+      }
+    }
+
     // Unknown token at statement start: consume and report
     if (t.tipo == TokenType.eof) return null;
     errors.add(
-      ParseError(
-        'Token inesperado no início de comando: ${t.lexema}',
-        linha: t.linha,
-        coluna: t.coluna,
-        contexto: extractLineContext(src, t.linha),
-      ),
+      ParseError.unexpected(t, contexto: extractLineContext(src, t.linha)),
     );
     tokens.next();
     _synchronize();
     return null;
+  }
+
+  ForStmt? parseFor() {
+    final kw = tokens.next(); // consume 'for'
+    // expect '('
+    try {
+      tokens.expect(TokenType.simbolo, '(');
+    } on StateError catch (_) {
+      final t = tokens.peek();
+      errors.add(
+        ParseError.expected(
+          '"("',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
+      );
+      _synchronize();
+      return null;
+    }
+
+    // forInit ::= varDecl | exprStmt | empty
+    Stmt? init;
+    if (_isTypeKeyword(tokens.peek())) {
+      init = parseDeclaration();
+    } else if (!(tokens.peek().tipo == TokenType.simbolo &&
+        tokens.peek().lexema == ';')) {
+      // if looks like an assignment statement, parse as such
+      if (tokens.peek().tipo == TokenType.identificador &&
+          tokens.peek(1).tipo == TokenType.operador &&
+          tokens.peek(1).lexema == '=') {
+        init = parseAssignment();
+      } else {
+        // parse expression statement and wrap in ExprStmt
+        final expr = parseExpression();
+        if (tokens.peek().tipo == TokenType.simbolo &&
+            tokens.peek().lexema == ';') {
+          tokens.next();
+        }
+        init = ExprStmt(expr, 0, 0);
+      }
+    } else {
+      // empty init
+    }
+
+    // condition
+    Expr? condition;
+    if (!(tokens.peek().tipo == TokenType.simbolo &&
+        tokens.peek().lexema == ';')) {
+      condition = parseExpression();
+    }
+    // expect ';'
+    if (tokens.peek().tipo == TokenType.simbolo &&
+        tokens.peek().lexema == ';') {
+      tokens.next();
+    } else {
+      final t = tokens.peek();
+      errors.add(
+        ParseError.expected(
+          '\";\"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
+      );
+      _synchronize();
+      return null;
+    }
+
+    // update expression
+    Expr? update;
+    if (!(tokens.peek().tipo == TokenType.simbolo &&
+        tokens.peek().lexema == ')')) {
+      update = parseExpression();
+    }
+
+    // expect ')'
+    if (!(tokens.peek().tipo == TokenType.simbolo &&
+        tokens.peek().lexema == ')')) {
+      final t = tokens.peek();
+      errors.add(
+        ParseError.expected(
+          '\")\"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
+      );
+      _synchronize();
+      return null;
+    }
+    tokens.next();
+
+    final body = parseCommand();
+    if (body == null) {
+      errors.add(
+        ParseError(
+          'Corpo do for ausente ou inválido na linha ${kw.linha}, coluna ${kw.coluna}',
+          linha: kw.linha,
+          coluna: kw.coluna,
+          contexto: extractLineContext(src, kw.linha),
+        ),
+      );
+      return null;
+    }
+
+    return ForStmt(init, condition, update, body, kw.linha, kw.coluna);
+  }
+
+  ReturnStmt? parseReturn() {
+    final kw = tokens.next(); // consume 'return'
+    Expr? value;
+    if (!(tokens.peek().tipo == TokenType.simbolo &&
+        tokens.peek().lexema == ';')) {
+      value = parseExpression();
+    }
+    // expect ';'
+    final semi = tokens.peek();
+    if (semi.tipo == TokenType.simbolo && semi.lexema == ';') {
+      tokens.next();
+    } else {
+      errors.add(
+        ParseError.expected(
+          '\";\"',
+          semi,
+          contexto: extractLineContext(src, semi.linha),
+        ),
+      );
+      _synchronize();
+      return null;
+    }
+
+    return ReturnStmt(value, kw.linha, kw.coluna);
+  }
+
+  FunctionDecl? parseFunctionDecl() {
+    // optional modifiers
+    final modifiers = <String>[];
+    while (tokens.peek().tipo == TokenType.palavraReservada &&
+        (tokens.peek().lexema == 'public' ||
+            tokens.peek().lexema == 'static')) {
+      modifiers.add(tokens.next().lexema);
+    }
+
+    // return type
+    String returnType = 'void';
+    if (_isTypeKeyword(tokens.peek())) {
+      returnType = tokens.next().lexema;
+    }
+
+    // function name
+    Token nameTok = tokens.peek();
+    if (nameTok.tipo == TokenType.identificador ||
+        nameTok.tipo == TokenType.palavraReservada) {
+      tokens.next();
+    } else {
+      final t = tokens.peek();
+      errors.add(
+        ParseError.expected(
+          'identificador',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
+      );
+      _synchronize();
+      return null;
+    }
+
+    // params
+    try {
+      tokens.expect(TokenType.simbolo, '(');
+    } on StateError catch (_) {
+      final t = tokens.peek();
+      errors.add(
+        ParseError.expected(
+          '\"(\"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
+      );
+      _synchronize();
+      return null;
+    }
+
+    final params = <Param>[];
+    if (!(tokens.peek().tipo == TokenType.simbolo &&
+        tokens.peek().lexema == ')')) {
+      // parse first param
+      while (true) {
+        if (!_isTypeKeyword(tokens.peek())) {
+          final t = tokens.peek();
+          errors.add(
+            ParseError.expected(
+              'tipo',
+              t,
+              contexto: extractLineContext(src, t.linha),
+            ),
+          );
+          _synchronize();
+          return null;
+        }
+        final ptype = tokens.next().lexema;
+        Token pname;
+        try {
+          pname = tokens.expect(TokenType.identificador);
+        } on StateError catch (_) {
+          final t = tokens.peek();
+          errors.add(
+            ParseError.expected(
+              'identificador',
+              t,
+              contexto: extractLineContext(src, t.linha),
+            ),
+          );
+          _synchronize();
+          return null;
+        }
+        params.add(Param(ptype, pname.lexema));
+        if (tokens.peek().tipo == TokenType.simbolo &&
+            tokens.peek().lexema == ',') {
+          tokens.next();
+          continue;
+        }
+        break;
+      }
+    }
+
+    // expect ')'
+    if (tokens.peek().tipo == TokenType.simbolo &&
+        tokens.peek().lexema == ')') {
+      tokens.next();
+    } else {
+      final t = tokens.peek();
+      errors.add(
+        ParseError.expected(
+          '\")\"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
+      );
+      _synchronize();
+      return null;
+    }
+
+    // body must be a block
+    final body = parseBlock();
+    if (body == null) return null;
+
+    return FunctionDecl(
+      modifiers,
+      returnType,
+      nameTok.lexema,
+      params,
+      body,
+      nameTok.linha,
+      nameTok.coluna,
+    );
   }
 
   Assign? parseAssignment() {
@@ -153,10 +452,9 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Esperado identificador para atribuição, encontrado ${t.lexema}',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          'identificador',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -169,10 +467,9 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Esperado "=" após identificador na atribuição, encontrado ${t.lexema}',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          '"="',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -187,10 +484,9 @@ class Parser {
       tokens.next();
     } else {
       errors.add(
-        ParseError(
-          'Esperado ";" após atribuição na linha ${semi.linha}, coluna ${semi.coluna}',
-          linha: semi.linha,
-          coluna: semi.coluna,
+        ParseError.expected(
+          '";"',
+          semi,
           contexto: extractLineContext(src, semi.linha),
         ),
       );
@@ -214,10 +510,9 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Esperado "(" após "if" na linha ${t.linha}, coluna ${t.coluna}',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          '"("',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -231,10 +526,9 @@ class Parser {
         tokens.peek().lexema == ')')) {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Esperado ")" após condição do if na linha ${t.linha}, coluna ${t.coluna}',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          '")"',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -273,10 +567,9 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Esperado "(" após "while" na linha ${t.linha}, coluna ${t.coluna}',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          '"("',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -288,10 +581,9 @@ class Parser {
         tokens.peek().lexema == ')')) {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Esperado ")" após condição do while na linha ${t.linha}, coluna ${t.coluna}',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          '")"',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -331,10 +623,9 @@ class Parser {
     } else {
       final t = tokens.peek();
       errors.add(
-        ParseError(
-          'Bloco não fechado: esperado "}" antes da linha ${t.linha}, coluna ${t.coluna}',
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          '"}"',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -356,13 +647,10 @@ class Parser {
     } on StateError catch (_) {
       // registrar erro de parsing mais amigável: identificador esperado após 'uids'
       final t = tokens.peek();
-      final msg =
-          'Esperado identificador após "uids" mas encontrado ${t.tipo} "${t.lexema}" na linha ${t.linha}, coluna ${t.coluna}';
       errors.add(
-        ParseError(
-          msg,
-          linha: t.linha,
-          coluna: t.coluna,
+        ParseError.expected(
+          'identificador',
+          t,
           contexto: extractLineContext(src, t.linha),
         ),
       );
@@ -382,17 +670,24 @@ class Parser {
         }
       }
       if (!foundSemi) {
-        final msg2 = nextTok.tipo == TokenType.eof
-            ? 'Esperado ";" antes do fim de arquivo após declaração de variável'
-            : 'Esperado ";" antes de "${nextTok.lexema}" na linha ${nextTok.linha}, coluna ${nextTok.coluna}';
-        errors.add(
-          ParseError(
-            msg2,
-            linha: nextTok.linha,
-            coluna: nextTok.coluna,
-            contexto: extractLineContext(src, nextTok.linha),
-          ),
-        );
+        if (nextTok.tipo == TokenType.eof) {
+          errors.add(
+            ParseError(
+              'Esperado ";" antes do fim de arquivo após declaração de variável',
+              linha: nextTok.linha,
+              coluna: nextTok.coluna,
+              contexto: extractLineContext(src, nextTok.linha),
+            ),
+          );
+        } else {
+          errors.add(
+            ParseError.expected(
+              '";"',
+              nextTok,
+              contexto: extractLineContext(src, nextTok.linha),
+            ),
+          );
+        }
       }
 
       _synchronize();
@@ -412,13 +707,10 @@ class Parser {
       tokens.next();
     } else {
       // registrar erro, sincronizar e continuar
-      final msg =
-          'Esperado ";" após declaração na linha ${semi.linha}, coluna ${semi.coluna}';
       errors.add(
-        ParseError(
-          msg,
-          linha: semi.linha,
-          coluna: semi.coluna,
+        ParseError.expected(
+          '";"',
+          semi,
           contexto: extractLineContext(src, semi.linha),
         ),
       );
@@ -429,8 +721,19 @@ class Parser {
     return VarDecl(kw.lexema, id.lexema, init, kw.linha, kw.coluna);
   }
 
-  /// Entry point with lowest precedence
-  Expr parseExpression() => _parseLogicalOr();
+  /// Entry point with lowest precedence (including assignment)
+  Expr parseExpression() => _parseAssignment();
+
+  Expr _parseAssignment() {
+    var left = _parseLogicalOr();
+    final t = tokens.peek();
+    if (t.tipo == TokenType.operador && t.lexema == '=') {
+      final opTok = tokens.next();
+      final right = _parseAssignment();
+      return Binary(left, '=', right, opTok.linha, opTok.coluna);
+    }
+    return left;
+  }
 
   Expr _parseLogicalOr() {
     var node = _parseLogicalAnd();
@@ -559,6 +862,46 @@ class Parser {
     }
     if (t.tipo == TokenType.identificador) {
       final tok = tokens.next();
+      // function call: IDENT '(' argList ')'
+      if (tokens.peek().tipo == TokenType.simbolo &&
+          tokens.peek().lexema == '(') {
+        tokens.next(); // consume '('
+        final args = <Expr>[];
+        if (!(tokens.peek().tipo == TokenType.simbolo &&
+            tokens.peek().lexema == ')')) {
+          while (true) {
+            args.add(parseExpression());
+            if (tokens.peek().tipo == TokenType.simbolo &&
+                tokens.peek().lexema == ',') {
+              tokens.next();
+              continue;
+            }
+            break;
+          }
+        }
+        // expect ')'
+        if (tokens.peek().tipo == TokenType.simbolo &&
+            tokens.peek().lexema == ')') {
+          tokens.next();
+        } else {
+          final close = tokens.peek();
+          errors.add(
+            ParseError.expected(
+              '")"',
+              close,
+              contexto: extractLineContext(src, close.linha),
+            ),
+          );
+          _synchronize();
+          return Identifier(tok.lexema, tok.linha, tok.coluna);
+        }
+        return Call(
+          Identifier(tok.lexema, tok.linha, tok.coluna),
+          args,
+          tok.linha,
+          tok.coluna,
+        );
+      }
       return Identifier(tok.lexema, tok.linha, tok.coluna);
     }
     if (t.tipo == TokenType.simbolo && t.lexema == '(') {
@@ -600,17 +943,29 @@ class Parser {
   void _synchronize() {
     while (!tokens.isAtEnd) {
       final t = tokens.peek();
-      // Stop when we find a semicolon (end of statement)
+
+      // Stop when we find a semicolon (end of statement) and consume it
       if (t.tipo == TokenType.simbolo && t.lexema == ';') {
         tokens.next();
         return;
       }
-      // Additionally, stop at the beginning of a new declaration/statement
-      // represented by a reserved word like 'uids', 'int', etc., so that
-      // recovery returns control to the parser at a sensible boundary.
-      if (t.tipo == TokenType.palavraReservada) {
-        return; // don't consume - allow outer loop to handle the token
+
+      // Also stop (and do not consume) at common statement/block boundaries
+      // so that the outer parsing loop can resume from a sensible token.
+      if (t.tipo == TokenType.simbolo &&
+          (t.lexema == '}' || t.lexema == ')' || t.lexema == '{')) {
+        return;
       }
+
+      // If we encounter an 'else' keyword it's a good resync point (belongs
+      // to the surrounding 'if'). For any other reserved word, also stop
+      // so the parser can start a new declaration/statement.
+      if (t.tipo == TokenType.palavraReservada) {
+        // do not consume the reserved word; return control to caller
+        return;
+      }
+
+      // otherwise advance and keep searching
       tokens.next();
     }
   }
