@@ -27,9 +27,26 @@ class ParseError {
     Token recebido, {
     String? contexto,
   }) {
+    // Normaliza o campo `esperado` removendo aspas e escapes
+    String normalize(String s) {
+      var out = s.trim();
+      // Remove pares de aspas externos se existirem
+      if ((out.startsWith('"') && out.endsWith('"')) ||
+          (out.startsWith("'") && out.endsWith("'"))) {
+        out = out.substring(1, out.length - 1);
+      }
+      // Remove sequências de escape comuns e aspas residuais
+      out = out.replaceAll(r'\"', '"');
+      out = out.replaceAll('"', '');
+      out = out.replaceAll('\\', '');
+      return out;
+    }
+
+    final esperadoNorm = normalize(esperado);
+
     return ParseError(
-      'Esperado $esperado, encontrado ${recebido.lexema}',
-      esperado: esperado,
+      'Esperado $esperadoNorm, encontrado ${recebido.lexema}',
+      esperado: esperadoNorm,
       recebido: recebido.toReadableString(),
       linha: recebido.linha,
       coluna: recebido.coluna,

@@ -333,10 +333,9 @@ class Parser {
       returnType = tokens.next().lexema;
     }
 
-    // function name
+    // function name (must be an identifier, not a reserved word)
     Token nameTok = tokens.peek();
-    if (nameTok.tipo == TokenType.identificador ||
-        nameTok.tipo == TokenType.palavraReservada) {
+    if (nameTok.tipo == TokenType.identificador) {
       tokens.next();
     } else {
       final t = tokens.peek();

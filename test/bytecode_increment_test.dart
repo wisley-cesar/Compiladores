@@ -29,8 +29,8 @@ int i = 5;
       expect(analyzer.errors.where((e) => !e.isWarning).isEmpty, isTrue,
           reason: 'Não deve haver erros semânticos');
       
-      final generator = BytecodeGenerator(symbolTable);
-      final bytecode = generator.generate(program);
+    final generator = BytecodeGenerator(symbolTable);
+    final bytecode = generator.generate(program);
       
       expect(generator.errors, isEmpty, reason: 'Não deve haver erros de geração');
       
@@ -45,21 +45,37 @@ int i = 5;
           i.opcode == Opcode.loadVar && i.operand == 'i');
       expect(loadVarIndex, greaterThan(0), reason: 'Deve ter loadVar("i")');
       
-      final pushOneIndex = instructions.indexWhere((i, idx) => 
-          idx > loadVarIndex && 
-          i.opcode == Opcode.pushInt && i.operand == 1);
-      expect(pushOneIndex, greaterThan(loadVarIndex), 
+      int pushOneIndex = -1;
+      for (int idx = loadVarIndex + 1; idx < instructions.length; idx++) {
+        final inst = instructions[idx];
+        if (inst.opcode == Opcode.pushInt && inst.operand == 1) {
+          pushOneIndex = idx;
+          break;
+        }
+      }
+      expect(pushOneIndex, greaterThan(loadVarIndex),
           reason: 'Deve ter pushInt(1) após loadVar');
-      
-      final addIndex = instructions.indexWhere((i, idx) => 
-          idx > pushOneIndex && i.opcode == Opcode.add);
-      expect(addIndex, greaterThan(pushOneIndex), 
+
+      int addIndex = -1;
+      for (int idx = pushOneIndex + 1; idx < instructions.length; idx++) {
+        final inst = instructions[idx];
+        if (inst.opcode == Opcode.add) {
+          addIndex = idx;
+          break;
+        }
+      }
+      expect(addIndex, greaterThan(pushOneIndex),
           reason: 'Deve ter add após pushInt(1)');
-      
-      final storeVarIndex = instructions.indexWhere((i, idx) => 
-          idx > addIndex && 
-          i.opcode == Opcode.storeVar && i.operand == 'i');
-      expect(storeVarIndex, greaterThan(addIndex), 
+
+      int storeVarIndex = -1;
+      for (int idx = addIndex + 1; idx < instructions.length; idx++) {
+        final inst = instructions[idx];
+        if (inst.opcode == Opcode.storeVar && inst.operand == 'i') {
+          storeVarIndex = idx;
+          break;
+        }
+      }
+      expect(storeVarIndex, greaterThan(addIndex),
           reason: 'Deve ter storeVar("i") após add');
       
       print('\n=== Prefixo ++i ===');
@@ -88,8 +104,8 @@ i++;
       expect(analyzer.errors.where((e) => !e.isWarning).isEmpty, isTrue,
           reason: 'Não deve haver erros semânticos');
       
-      final generator = BytecodeGenerator(symbolTable);
-      final bytecode = generator.generate(program);
+    final generator = BytecodeGenerator(symbolTable);
+    final bytecode = generator.generate(program);
       
       expect(generator.errors, isEmpty, reason: 'Não deve haver erros de geração');
       
@@ -131,8 +147,8 @@ int i = 10;
       final analyzer = SemanticAnalyzer(null, src);
       final symbolTable = analyzer.analyze(program);
       
-      final generator = BytecodeGenerator(symbolTable);
-      final bytecode = generator.generate(program);
+    final generator = BytecodeGenerator(symbolTable);
+    final bytecode = generator.generate(program);
       
       expect(generator.errors, isEmpty);
       
@@ -161,8 +177,8 @@ i--;
       final analyzer = SemanticAnalyzer(null, src);
       final symbolTable = analyzer.analyze(program);
       
-      final generator = BytecodeGenerator(symbolTable);
-      final bytecode = generator.generate(program);
+    final generator = BytecodeGenerator(symbolTable);
+    final bytecode = generator.generate(program);
       
       expect(generator.errors, isEmpty);
       
