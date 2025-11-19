@@ -45,20 +45,24 @@ int i = 5;
           i.opcode == Opcode.loadVar && i.operand == 'i');
       expect(loadVarIndex, greaterThan(0), reason: 'Deve ter loadVar("i")');
       
-      final pushOneIndex = instructions.indexWhere((i, idx) => 
-          idx > loadVarIndex && 
-          i.opcode == Opcode.pushInt && i.operand == 1);
+      final pushOneIndex = instructions.indexWhere(
+        (instr) => instr.opcode == Opcode.pushInt && instr.operand == 1,
+        loadVarIndex + 1,
+      );
       expect(pushOneIndex, greaterThan(loadVarIndex), 
           reason: 'Deve ter pushInt(1) após loadVar');
       
-      final addIndex = instructions.indexWhere((i, idx) => 
-          idx > pushOneIndex && i.opcode == Opcode.add);
+      final addIndex = instructions.indexWhere(
+        (instr) => instr.opcode == Opcode.add,
+        pushOneIndex + 1,
+      );
       expect(addIndex, greaterThan(pushOneIndex), 
           reason: 'Deve ter add após pushInt(1)');
       
-      final storeVarIndex = instructions.indexWhere((i, idx) => 
-          idx > addIndex && 
-          i.opcode == Opcode.storeVar && i.operand == 'i');
+      final storeVarIndex = instructions.indexWhere(
+        (instr) => instr.opcode == Opcode.storeVar && instr.operand == 'i',
+        addIndex + 1,
+      );
       expect(storeVarIndex, greaterThan(addIndex), 
           reason: 'Deve ter storeVar("i") após add');
       
