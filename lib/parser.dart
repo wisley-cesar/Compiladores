@@ -162,7 +162,8 @@ class Parser {
         t.tipo == TokenType.booleano ||
         (t.tipo == TokenType.simbolo && t.lexema == '(') ||
         (t.tipo == TokenType.operador &&
-            (t.lexema == '+' || t.lexema == '-' || t.lexema == '!'))) {
+            (t.lexema == '+' || t.lexema == '-' || t.lexema == '!' ||
+                t.lexema == '++' || t.lexema == '--'))) {
       final expr = parseExpression();
       final semi = tokens.peek();
       if (semi.tipo == TokenType.simbolo && semi.lexema == ';') {
@@ -171,7 +172,7 @@ class Parser {
       } else {
         errors.add(
           ParseError.expected(
-            ';',
+            '";"',
             semi,
             contexto: extractLineContext(src, semi.linha),
           ),
@@ -199,7 +200,11 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected('(', t, contexto: extractLineContext(src, t.linha)),
+        ParseError.expected(
+          '"("'.replaceAll('"', '"'),
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
       );
       _synchronize();
       return null;
@@ -260,7 +265,11 @@ class Parser {
         tokens.peek().lexema == ')')) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(')', t, contexto: extractLineContext(src, t.linha)),
+        ParseError.expected(
+          '\")\"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
       );
       _synchronize();
       return null;
@@ -297,7 +306,7 @@ class Parser {
     } else {
       errors.add(
         ParseError.expected(
-          ';',
+          '\";\"',
           semi,
           contexto: extractLineContext(src, semi.linha),
         ),
@@ -326,8 +335,8 @@ class Parser {
 
     // function name
     Token nameTok = tokens.peek();
-    // Function name must be an identifier; reserved words are not allowed
-    if (nameTok.tipo == TokenType.identificador) {
+    if (nameTok.tipo == TokenType.identificador ||
+        nameTok.tipo == TokenType.palavraReservada) {
       tokens.next();
     } else {
       final t = tokens.peek();
@@ -348,7 +357,11 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected('(', t, contexto: extractLineContext(src, t.linha)),
+        ParseError.expected(
+          '\"(\"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
       );
       _synchronize();
       return null;
@@ -404,7 +417,11 @@ class Parser {
     } else {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(')', t, contexto: extractLineContext(src, t.linha)),
+        ParseError.expected(
+          '\")\"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
       );
       _synchronize();
       return null;
@@ -465,7 +482,7 @@ class Parser {
     } else {
       errors.add(
         ParseError.expected(
-          ';',
+          '";"',
           semi,
           contexto: extractLineContext(src, semi.linha),
         ),
@@ -490,7 +507,11 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected('(', t, contexto: extractLineContext(src, t.linha)),
+        ParseError.expected(
+          '"("',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
       );
       _synchronize();
       return null;
@@ -502,7 +523,11 @@ class Parser {
         tokens.peek().lexema == ')')) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(')', t, contexto: extractLineContext(src, t.linha)),
+        ParseError.expected(
+          '")"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
       );
       _synchronize();
       return null;
@@ -539,7 +564,11 @@ class Parser {
     } on StateError catch (_) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected('(', t, contexto: extractLineContext(src, t.linha)),
+        ParseError.expected(
+          '"("',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
       );
       _synchronize();
       return null;
@@ -549,7 +578,11 @@ class Parser {
         tokens.peek().lexema == ')')) {
       final t = tokens.peek();
       errors.add(
-        ParseError.expected(')', t, contexto: extractLineContext(src, t.linha)),
+        ParseError.expected(
+          '")"',
+          t,
+          contexto: extractLineContext(src, t.linha),
+        ),
       );
       _synchronize();
       return null;
@@ -646,7 +679,7 @@ class Parser {
         } else {
           errors.add(
             ParseError.expected(
-              ';',
+              '";"',
               nextTok,
               contexto: extractLineContext(src, nextTok.linha),
             ),
@@ -673,7 +706,7 @@ class Parser {
       // registrar erro, sincronizar e continuar
       errors.add(
         ParseError.expected(
-          ';',
+          '";"',
           semi,
           contexto: extractLineContext(src, semi.linha),
         ),
@@ -799,13 +832,38 @@ class Parser {
   Expr _parseUnary() {
     final t = tokens.peek();
     if (t.tipo == TokenType.operador &&
-        (t.lexema == '+' || t.lexema == '-' || t.lexema == '!')) {
+        (t.lexema == '+' || t.lexema == '-' || t.lexema == '!' ||
+            t.lexema == '++' || t.lexema == '--')) {
       final opTok = tokens.next();
       final op = opTok.lexema;
       final operand = _parseUnary();
       return Unary(op, operand, opTok.linha, opTok.coluna);
     }
-    return _parsePrimary();
+    return _parsePostfix();
+  }
+
+  /// Parse postfix operators (i++, i--)
+  Expr _parsePostfix() {
+    var expr = _parsePrimary();
+    
+    // Verifica operadores postfix: ++ e --
+    while (true) {
+      final t = tokens.peek();
+      if (t.tipo == TokenType.operador &&
+          (t.lexema == '++' || t.lexema == '--')) {
+        final opTok = tokens.next();
+        // Cria um Unary com operador postfix (marcado com 'post' no operador)
+        // Por enquanto, usamos o operador normal e o gerador de bytecode
+        // diferencia por contexto (se é prefixo, o operando vem depois,
+        // se é postfix, o operando já foi parseado)
+        final op = '${opTok.lexema}post'; // Marca como postfix
+        expr = Unary(op, expr, opTok.linha, opTok.coluna);
+      } else {
+        break;
+      }
+    }
+    
+    return expr;
   }
 
   Expr _parsePrimary() {
@@ -851,7 +909,7 @@ class Parser {
           final close = tokens.peek();
           errors.add(
             ParseError.expected(
-              ')',
+              '")"',
               close,
               contexto: extractLineContext(src, close.linha),
             ),

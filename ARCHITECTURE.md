@@ -25,17 +25,7 @@ O compilador foi projetado seguindo o princípio de **Separação de Responsabil
   - Operadores e símbolos
   - Comentários (linha e bloco)
 
-### 3. **AmbiguityDetector** (Detecção de Ambiguidades)
-- **Responsabilidade**: Detecta ambiguidades sintáticas
-- **Arquivo**: `lib/ambiguity_detector.dart`
-- **Funcionalidades**:
-  - Parênteses extras consecutivos
-  - Chaves extras consecutivas
-  - Colchetes extras consecutivos
-  - Ponto e vírgula duplo
-  - Padrões problemáticos específicos
-
-### 4. **ErrorHandler** (Tratamento de Erros)
+### 3. **ErrorHandler** (Tratamento de Erros)
 - **Responsabilidade**: Gerencia erros léxicos
 - **Arquivo**: `lib/error_handler.dart`
 - **Funcionalidades**:
@@ -43,7 +33,7 @@ O compilador foi projetado seguindo o princípio de **Separação de Responsabil
   - Fornece estatísticas de erros
   - Mantém lista de erros para relatórios
 
-### 5. **Statistics** (Estatísticas e Relatórios)
+### 4. **Statistics** (Estatísticas e Relatórios)
 - **Responsabilidade**: Gera estatísticas e relatórios
 - **Arquivo**: `lib/statistics.dart`
 - **Funcionalidades**:
@@ -59,14 +49,14 @@ Código Fonte
      ↓
    Lexer
      ↓
-┌─────────────────────────────────────┐
-│  TokenRecognizer  │  AmbiguityDetector │
-│  - Strings        │  - Parênteses      │
-│  - Números        │  - Chaves          │
-│  - Identificadores│  - Colchetes       │
-│  - Operadores     │  - Ponto e vírgula │
-│  - Comentários    │  - Padrões         │
-└─────────────────────────────────────┘
+┌─────────────────────┐
+│  TokenRecognizer    │
+│  - Strings          │
+│  - Números          │
+│  - Identificadores  │
+│  - Operadores       │
+│  - Comentários      │
+└─────────────────────┘
      ↓
   ErrorHandler
      ↓
@@ -84,7 +74,6 @@ Código Fonte
 
 ### ✅ **Extensibilidade**
 - Novos tipos de tokens podem ser adicionados ao `TokenRecognizer`
-- Novas detecções de ambiguidade no `AmbiguityDetector`
 - Novos tipos de relatórios no `Statistics`
 
 ### ✅ **Testabilidade**

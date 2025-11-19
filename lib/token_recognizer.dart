@@ -44,6 +44,16 @@ class TokenRecognizer {
 
   /// Lê uma string literal entre aspas duplas
   /// Trata strings com escape sequences básicas
+  /// 
+  /// Escape sequences suportadas:
+  /// - \n : nova linha
+  /// - \t : tabulação
+  /// - \" : aspas duplas
+  /// - \\ : barra invertida
+  /// - \r : retorno de carro
+  /// - \0 : caractere nulo
+  /// 
+  /// Qualquer outro escape sequence será tratado como erro léxico.
   void lerString() {
     final startLinha = linha;
     final startColuna = coluna;
@@ -63,9 +73,27 @@ class TokenRecognizer {
         return;
       }
 
-      // Tratar escape sequences básicas
+      // Tratar escape sequences
       if (codigo[pos] == '\\' && pos + 1 < codigo.length) {
-        avancar(); // consome a barra e atualiza linha/coluna se for \n etc.
+        final escapePos = pos;
+        avancar(); // consome a barra invertida
+        
+        // Valida o caractere após a barra invertida
+        final escapeChar = pos < codigo.length ? codigo[pos] : '';
+        const escapeSequencesValidas = ['n', 't', '"', '\\', 'r', '0'];
+        
+        if (!escapeSequencesValidas.contains(escapeChar)) {
+          // Escape sequence inválida
+          errorHandler?.adicionarErro(
+            'Escape sequence inválida: \\$escapeChar. Escape sequences válidas: \\n, \\t, \\", \\\\, \\r, \\0',
+            linha,
+            coluna,
+            codigo,
+            escapePos,
+          );
+          // Continua processamento, tratando como caractere literal
+        }
+        
         // Consome o caractere escapado
         if (pos < codigo.length) {
           avancar();
@@ -94,67 +122,99 @@ class TokenRecognizer {
     adicionar(TokenType.string, valor, startLinha, startColuna);
   }
 
-  /// Lê números inteiros e decimais
-  /// Suporta notação científica básica
+  /// Lê números inteiros e decimais (com ou sem parte inteira) e notação científica
+  /// 
+  /// Formatos aceitos:
+  /// - Inteiros: `123`, `0`, `42`
+  /// - Decimais com parte inteira: `1.5`, `123.456`
+  /// - Decimais sem parte inteira: `.5`, `.123` (aceito)
+  /// - Decimais sem parte fracionária: `5.` (não aceito - gera erro)
+  /// - Notação científica: `1.23e5`, `1.23e+5`, `1.23e-5`, `.5e10`
+  /// 
+  /// Validações:
+  /// - Pelo menos um dígito deve ser consumido
+  /// - Expoente deve ser seguido de dígitos (opcionalmente precedido de + ou -)
+  /// - Números malformados geram erro léxico
   void lerNumero() {
     final startLinha = linha;
     final startColuna = coluna;
     final inicio = pos;
 
-    // Parte inteira
-    while (pos < codigo.length && _isDigit(codigo[pos])) {
-      avancar();
-    }
+    bool consumiuDigito = false;
 
-    // Ponto decimal
-    if (pos < codigo.length && codigo[pos] == '.') {
-      if (pos + 1 < codigo.length && _isDigit(codigo[pos + 1])) {
-        avancar(); // consome o ponto
-        while (pos < codigo.length && _isDigit(codigo[pos])) {
-          avancar();
-        }
+    void consumirDigitos() {
+      while (pos < codigo.length && _isDigit(codigo[pos])) {
+        avancar();
+        consumiuDigito = true;
       }
     }
 
-    // Notação científica (e ou E) - verificar lookahead antes de consumir
+    // Aceita números começando com dígito ou com ponto (ex: .5)
+    if (_isDigit(codigo[pos])) {
+      consumirDigitos();
+    } else if (codigo[pos] == '.') {
+      avancar(); // consome o ponto inicial
+      if (pos < codigo.length && _isDigit(codigo[pos])) {
+        consumiuDigito = true;
+        consumirDigitos();
+      } else {
+        // Ponto sem dígito após - erro
+        errorHandler?.adicionarErro(
+          'Número malformado - ponto sem dígitos',
+          startLinha,
+          startColuna,
+          codigo,
+          inicio,
+        );
+        return;
+      }
+    }
+
+    // Parte fracionária opcional
+    if (pos < codigo.length && codigo[pos] == '.') {
+      final look = pos + 1;
+      if (look < codigo.length && _isDigit(codigo[look])) {
+        avancar(); // consome '.'
+        consumirDigitos();
+      }
+    }
+
+    // Notação científica
     if (pos < codigo.length && (codigo[pos] == 'e' || codigo[pos] == 'E')) {
+      final savedPos = pos;
+      final savedLinha = linha;
+      final savedColuna = coluna;
       int look = pos + 1;
       if (look < codigo.length &&
           (codigo[look] == '+' || codigo[look] == '-')) {
         look++;
       }
       if (look < codigo.length && _isDigit(codigo[look])) {
-        // Consumir expoente válido
-        avancar(); // consome e/E
+        avancar(); // e/E
         if (pos < codigo.length && (codigo[pos] == '+' || codigo[pos] == '-')) {
           avancar();
         }
-        while (pos < codigo.length && _isDigit(codigo[pos])) {
-          avancar();
-        }
+        consumirDigitos();
       } else {
-        // Expoente inválido: reportar erro e avançar para evitar laço infinito
         errorHandler?.adicionarErro(
-          'Expoente inválido em número',
+          'Expoente inválido em número - deve ser seguido de dígitos',
           startLinha,
           startColuna,
           codigo,
-          pos,
+          savedPos,
         );
-        // consumir o 'e' e possível sinal para continuar a análise
-        avancar();
-        if (pos < codigo.length && (codigo[pos] == '+' || codigo[pos] == '-')) {
-          avancar();
-        }
+        pos = savedPos;
+        linha = savedLinha;
+        coluna = savedColuna;
       }
     }
 
     final valor = codigo.substring(inicio, pos);
 
-    // Validar formato do número
-    if (valor.isEmpty) {
+    // Validação final: deve ter consumido pelo menos um dígito
+    if (!consumiuDigito || valor == '.' || valor.isEmpty) {
       errorHandler?.adicionarErro(
-        'Número malformado',
+        'Número malformado - formato inválido',
         startLinha,
         startColuna,
         codigo,
