@@ -1,4 +1,4 @@
-part of ast;
+part of 'package:compilador/ast/ast.dart';
 
 class VarDecl extends Stmt {
   final String keyword; // e.g., 'uids' or other
@@ -12,4 +12,3 @@ class VarDecl extends Stmt {
   @override
   T accept<T>(AstVisitor<T> visitor) => visitor.visitVarDecl(this);
 }
-

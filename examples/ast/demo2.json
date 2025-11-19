@@ -1,0 +1,63 @@
+{
+  "type": "Program",
+  "statements": [
+    {
+      "type": "Block",
+      "statements": [
+        {
+          "type": "ExprStmt",
+          "expr": {
+            "type": "Call",
+            "callee": {
+              "type": "Identifier",
+              "name": "print",
+              "linha": 3,
+              "coluna": 3
+            },
+            "args": [
+              {
+                "type": "Binary",
+                "operator": "+",
+                "left": {
+                  "type": "Literal",
+                  "lexeme": "Iter: ",
+                  "kind": "string",
+                  "linha": 3,
+                  "coluna": 9
+                },
+                "right": {
+                  "type": "Identifier",
+                  "name": "i",
+                  "linha": 3,
+                  "coluna": 20
+                },
+                "linha": 3,
+                "coluna": 18
+              }
+            ],
+            "linha": 3,
+            "coluna": 3
+          },
+          "linha": 3,
+          "coluna": 3
+        }
+      ],
+      "linha": 2,
+      "coluna": 29
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "y",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "3.14",
+        "kind": "double",
+        "linha": 5,
+        "coluna": 10
+      },
+      "linha": 5,
+      "coluna": 1
+    }
+  ]
+}

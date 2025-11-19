@@ -1,0 +1,80 @@
+{
+  "type": "Program",
+  "statements": [
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "i",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "0",
+        "kind": "int",
+        "linha": 1,
+        "coluna": 10
+      },
+      "linha": 1,
+      "coluna": 1
+    },
+    {
+      "type": "WhileStmt",
+      "condition": {
+        "type": "Binary",
+        "operator": "<",
+        "left": {
+          "type": "Identifier",
+          "name": "i",
+          "linha": 2,
+          "coluna": 8
+        },
+        "right": {
+          "type": "Literal",
+          "lexeme": "3",
+          "kind": "int",
+          "linha": 2,
+          "coluna": 12
+        },
+        "linha": 2,
+        "coluna": 10
+      },
+      "body": {
+        "type": "Block",
+        "statements": [
+          {
+            "type": "Assign",
+            "target": {
+              "type": "Identifier",
+              "name": "i",
+              "linha": 3,
+              "coluna": 3
+            },
+            "value": {
+              "type": "Binary",
+              "operator": "+",
+              "left": {
+                "type": "Identifier",
+                "name": "i",
+                "linha": 3,
+                "coluna": 7
+              },
+              "right": {
+                "type": "Literal",
+                "lexeme": "1",
+                "kind": "int",
+                "linha": 3,
+                "coluna": 11
+              },
+              "linha": 3,
+              "coluna": 9
+            },
+            "linha": 3,
+            "coluna": 3
+          }
+        ],
+        "linha": 2,
+        "coluna": 15
+      },
+      "linha": 2,
+      "coluna": 1
+    }
+  ]
+}

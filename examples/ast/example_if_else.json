@@ -1,0 +1,98 @@
+{
+  "type": "Program",
+  "statements": [
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "a",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "0",
+        "kind": "int",
+        "linha": 2,
+        "coluna": 10
+      },
+      "linha": 2,
+      "coluna": 1
+    },
+    {
+      "type": "IfStmt",
+      "condition": {
+        "type": "Binary",
+        "operator": "<",
+        "left": {
+          "type": "Identifier",
+          "name": "a",
+          "linha": 3,
+          "coluna": 5
+        },
+        "right": {
+          "type": "Literal",
+          "lexeme": "5",
+          "kind": "int",
+          "linha": 3,
+          "coluna": 9
+        },
+        "linha": 3,
+        "coluna": 7
+      },
+      "then": {
+        "type": "Block",
+        "statements": [
+          {
+            "type": "Assign",
+            "target": {
+              "type": "Identifier",
+              "name": "a",
+              "linha": 4,
+              "coluna": 3
+            },
+            "value": {
+              "type": "Binary",
+              "operator": "+",
+              "left": {
+                "type": "Identifier",
+                "name": "a",
+                "linha": 4,
+                "coluna": 7
+              },
+              "right": {
+                "type": "Literal",
+                "lexeme": "1",
+                "kind": "int",
+                "linha": 4,
+                "coluna": 11
+              },
+              "linha": 4,
+              "coluna": 9
+            },
+            "linha": 4,
+            "coluna": 3
+          }
+        ],
+        "linha": 3,
+        "coluna": 12
+      },
+      "else": {
+        "type": "Assign",
+        "target": {
+          "type": "Identifier",
+          "name": "a",
+          "linha": 5,
+          "coluna": 8
+        },
+        "value": {
+          "type": "Literal",
+          "lexeme": "0",
+          "kind": "int",
+          "linha": 5,
+          "coluna": 12
+        },
+        "linha": 5,
+        "coluna": 8
+      },
+      "linha": 3,
+      "coluna": 1
+    }
+  ]
+}

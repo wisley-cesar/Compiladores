@@ -1,0 +1,4 @@
+int x = 10;
+float y;
+uids id = 123;
+x = x + 2;

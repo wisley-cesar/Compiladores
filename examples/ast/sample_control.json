@@ -1,0 +1,142 @@
+{
+  "type": "Program",
+  "statements": [
+    {
+      "type": "VarDecl",
+      "keyword": "int",
+      "name": "n",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "3",
+        "kind": "int",
+        "linha": 1,
+        "coluna": 9
+      },
+      "linha": 1,
+      "coluna": 1
+    },
+    {
+      "type": "WhileStmt",
+      "condition": {
+        "type": "Binary",
+        "operator": ">",
+        "left": {
+          "type": "Identifier",
+          "name": "n",
+          "linha": 2,
+          "coluna": 8
+        },
+        "right": {
+          "type": "Literal",
+          "lexeme": "0",
+          "kind": "int",
+          "linha": 2,
+          "coluna": 12
+        },
+        "linha": 2,
+        "coluna": 10
+      },
+      "body": {
+        "type": "Block",
+        "statements": [
+          {
+            "type": "IfStmt",
+            "condition": {
+              "type": "Binary",
+              "operator": "==",
+              "left": {
+                "type": "Identifier",
+                "name": "n",
+                "linha": 3,
+                "coluna": 7
+              },
+              "right": {
+                "type": "Literal",
+                "lexeme": "2",
+                "kind": "int",
+                "linha": 3,
+                "coluna": 12
+              },
+              "linha": 3,
+              "coluna": 9
+            },
+            "then": {
+              "type": "Block",
+              "statements": [
+                {
+                  "type": "Assign",
+                  "target": {
+                    "type": "Identifier",
+                    "name": "n",
+                    "linha": 4,
+                    "coluna": 5
+                  },
+                  "value": {
+                    "type": "Binary",
+                    "operator": "-",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "n",
+                      "linha": 4,
+                      "coluna": 9
+                    },
+                    "right": {
+                      "type": "Literal",
+                      "lexeme": "1",
+                      "kind": "int",
+                      "linha": 4,
+                      "coluna": 13
+                    },
+                    "linha": 4,
+                    "coluna": 11
+                  },
+                  "linha": 4,
+                  "coluna": 5
+                }
+              ],
+              "linha": 3,
+              "coluna": 15
+            },
+            "else": null,
+            "linha": 3,
+            "coluna": 3
+          },
+          {
+            "type": "Assign",
+            "target": {
+              "type": "Identifier",
+              "name": "n",
+              "linha": 6,
+              "coluna": 3
+            },
+            "value": {
+              "type": "Binary",
+              "operator": "-",
+              "left": {
+                "type": "Identifier",
+                "name": "n",
+                "linha": 6,
+                "coluna": 7
+              },
+              "right": {
+                "type": "Literal",
+                "lexeme": "1",
+                "kind": "int",
+                "linha": 6,
+                "coluna": 11
+              },
+              "linha": 6,
+              "coluna": 9
+            },
+            "linha": 6,
+            "coluna": 3
+          }
+        ],
+        "linha": 2,
+        "coluna": 15
+      },
+      "linha": 2,
+      "coluna": 1
+    }
+  ]
+}

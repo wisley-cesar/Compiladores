@@ -18,7 +18,10 @@ void main() {
 
       expect(table.lookup('x'), isNotNull);
       expect(analyzer.errors, isNotEmpty);
-      expect(analyzer.errors.any((e) => e.mensagem.contains('Redeclaração')), isTrue);
+      expect(
+        analyzer.errors.any((e) => e.mensagem.contains('Redeclaração')),
+        isTrue,
+      );
     });
 
     test('uso antes da declaração gera erro e tipo dynamic', () {
@@ -39,7 +42,12 @@ void main() {
       expect(b, isNotNull);
       // a deveria receber type dynamic devido ao uso de b indefinido no momento
       expect(a?.type, equals('dynamic'));
-      expect(analyzer.errors.any((e) => e.mensagem.contains('Uso de variável antes da declaração')), isTrue);
+      expect(
+        analyzer.errors.any(
+          (e) => e.mensagem.contains('Uso de variável antes da declaração'),
+        ),
+        isTrue,
+      );
     });
   });
 }

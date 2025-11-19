@@ -2,27 +2,24 @@
 enum TokenType {
   // Palavras reservadas
   palavraReservada,
-  
+
   // Identificadores (nomes de variáveis, funções, etc.)
   identificador,
-  
+
   // Literais
-  numero,        // Números inteiros e decimais
-  string,        // Strings entre aspas duplas
-  booleano,      // true, false
-  
+  numero, // Números inteiros e decimais
+  string, // Strings entre aspas duplas
+  booleano, // true, false
   // Operadores
-  operador,      // +, -, *, /, =, ==, !=, <, >, <=, >=
-  
+  operador, // +, -, *, /, =, ==, !=, <, >, <=, >=
   // Símbolos especiais
-  simbolo,       // (, ), {, }, [, ], ;, ,, .
-  
+  simbolo, // (, ), {, }, [, ], ;, ,, .
   // Comentários (ignorados pelo parser)
   comentario,
-  
+
   // Erros léxicos
   erro,
-  
+
   // Fim de arquivo
   eof,
 }
@@ -38,15 +35,16 @@ class Token {
 
   /// Verifica se o token é um operador
   bool get isOperador => tipo == TokenType.operador;
-  
+
   /// Verifica se o token é uma palavra reservada
   bool get isPalavraReservada => tipo == TokenType.palavraReservada;
-  
+
   /// Verifica se o token é um literal
-  bool get isLiteral => tipo == TokenType.numero || 
-                       tipo == TokenType.string || 
-                       tipo == TokenType.booleano;
-  
+  bool get isLiteral =>
+      tipo == TokenType.numero ||
+      tipo == TokenType.string ||
+      tipo == TokenType.booleano;
+
   /// Verifica se o token é um identificador
   bool get isIdentificador => tipo == TokenType.identificador;
 
@@ -54,7 +52,7 @@ class Token {
   String toString() {
     return '(${tipo.name.toUpperCase()}, "$lexema", linha: $linha, col: $coluna)';
   }
-  
+
   /// Retorna uma representação mais legível do token
   String toReadableString() {
     switch (tipo) {
@@ -80,7 +78,7 @@ class Token {
         return 'Token: $lexema';
     }
   }
-  
+
   /// Serializa o token para um mapa (útil para exportar/JSON)
   Map<String, dynamic> toJson() {
     return {

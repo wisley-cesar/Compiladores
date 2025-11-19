@@ -1,5 +1,4 @@
-
-/// Classe responsável pelo tratamento de erros léxicos
+// Classe responsável pelo tratamento de erros léxicos
 import 'lex_error.dart';
 
 class ErrorHandler {
@@ -7,11 +6,23 @@ class ErrorHandler {
 
   /// Adiciona um erro léxico à lista de erros como objeto `LexError`.
   /// Mantém compatibilidade retornando mensagens formatadas via `listaErros`.
-  void adicionarErro(String mensagem, int linha, int coluna, String codigo, int pos) {
+  void adicionarErro(
+    String mensagem,
+    int linha,
+    int coluna,
+    String codigo,
+    int pos,
+  ) {
     final snippet = _extrairContexto(codigo, pos, 20);
     final lex = LexError(mensagem, linha, coluna, snippet);
     // Evitar duplicatas exatas de erro (mesma mensagem, posição e contexto)
-    final exists = _erros.any((e) => e.mensagem == lex.mensagem && e.linha == lex.linha && e.coluna == lex.coluna && e.contexto == lex.contexto);
+    final exists = _erros.any(
+      (e) =>
+          e.mensagem == lex.mensagem &&
+          e.linha == lex.linha &&
+          e.coluna == lex.coluna &&
+          e.contexto == lex.contexto,
+    );
     if (!exists) {
       _erros.add(lex);
     }
@@ -33,7 +44,8 @@ class ErrorHandler {
   bool get temErros => _erros.isNotEmpty;
 
   /// Retorna a lista de erros formatada (compatível com API existente)
-  List<String> get listaErros => List.unmodifiable(_erros.map((e) => e.toString()).toList());
+  List<String> get listaErros =>
+      List.unmodifiable(_erros.map((e) => e.toString()).toList());
 
   /// Retorna a lista de erros estruturada
   List<LexError> get listaLexErrors => List.unmodifiable(_erros);

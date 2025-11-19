@@ -16,15 +16,15 @@ class Lexer {
   int linha = 1;
   int coluna = 1;
   final List<Token> tokens = [];
-  
+
   // Componentes modulares
   late final ErrorHandler _errorHandler;
   late final TokenRecognizer _tokenRecognizer;
   late final AmbiguityDetector _ambiguityDetector;
 
   /// Operadores unários e binários
-  static const operadores = OPERADORES;
-  static const simbolos = SIMBOLOS;
+  static const operadores = operadoresSet;
+  static const simbolos = simbolosSet;
 
   Lexer(this.codigo) {
     _errorHandler = ErrorHandler();
@@ -51,7 +51,7 @@ class Lexer {
         avancar();
         continue;
       }
-      
+
       // Tratar quebras de linha
       if (char == '\n') {
         linha++;
@@ -59,7 +59,7 @@ class Lexer {
         pos++;
         continue;
       }
-      
+
       // Comentários de linha (//)
       if (char == '/' && olharProximo() == '/') {
         _tokenRecognizer.pos = pos;
@@ -69,104 +69,116 @@ class Lexer {
         pos = _tokenRecognizer.pos;
         continue;
       }
-      
+
       // Comentários de bloco (/* */)
       if (char == '/' && olharProximo() == '*') {
         _tokenRecognizer.pos = pos;
         _tokenRecognizer.linha = linha;
         _tokenRecognizer.coluna = coluna;
-        
+
         final comentarioFechado = _tokenRecognizer.ignorarComentarioBloco();
         if (!comentarioFechado) {
-          _errorHandler.adicionarErro('Comentário de bloco não fechado - possível ambiguidade sintática', linha, coluna, codigo, pos);
+          _errorHandler.adicionarErro(
+            'Comentário de bloco não fechado - possível ambiguidade sintática',
+            linha,
+            coluna,
+            codigo,
+            pos,
+          );
         }
-        
+
         pos = _tokenRecognizer.pos;
         linha = _tokenRecognizer.linha;
         coluna = _tokenRecognizer.coluna;
         continue;
       }
-      
+
       // Strings literais
       if (char == '"') {
         _tokenRecognizer.pos = pos;
         _tokenRecognizer.linha = linha;
         _tokenRecognizer.coluna = coluna;
-        
+
         _tokenRecognizer.lerString();
         // Se o recognizer não produziu um token de string, ele já reportou o erro.
         // Apenas adicionamos tokens reconhecidos quando existirem.
         tokens.addAll(_tokenRecognizer.tokens);
         _tokenRecognizer.tokens.clear();
-        
+
         pos = _tokenRecognizer.pos;
         linha = _tokenRecognizer.linha;
         coluna = _tokenRecognizer.coluna;
         continue;
       }
-      
+
       // Números (inteiros e decimais)
       if (_isDigit(char)) {
         _tokenRecognizer.pos = pos;
         _tokenRecognizer.linha = linha;
         _tokenRecognizer.coluna = coluna;
-        
+
         _tokenRecognizer.lerNumero();
-        
+
         // Adicionar tokens reconhecidos
         tokens.addAll(_tokenRecognizer.tokens);
         _tokenRecognizer.tokens.clear();
-        
+
         pos = _tokenRecognizer.pos;
         linha = _tokenRecognizer.linha;
         coluna = _tokenRecognizer.coluna;
         continue;
       }
-      
+
       // Identificadores e palavras reservadas
       if (_isLetter(char)) {
         _tokenRecognizer.pos = pos;
         _tokenRecognizer.linha = linha;
         _tokenRecognizer.coluna = coluna;
-        
+
         _tokenRecognizer.lerIdentificadorOuPalavraReservada();
-        
+
         // Adicionar tokens reconhecidos
         tokens.addAll(_tokenRecognizer.tokens);
         _tokenRecognizer.tokens.clear();
-        
+
         pos = _tokenRecognizer.pos;
         linha = _tokenRecognizer.linha;
         coluna = _tokenRecognizer.coluna;
         continue;
       }
-      
+
       // Operadores e símbolos
       if (_isOperadorOuSimbolo(char)) {
         _tokenRecognizer.pos = pos;
         _tokenRecognizer.linha = linha;
         _tokenRecognizer.coluna = coluna;
-        
+
         _tokenRecognizer.lerOperadorOuSimbolo();
-        
+
         // Detectar ambiguidades
         _ambiguityDetector.atualizarPosicao(pos, linha, coluna);
         _ambiguityDetector.detectarAmbiguidades(char, (mensagem) {
           _errorHandler.adicionarErro(mensagem, linha, coluna, codigo, pos);
         });
-        
+
         // Adicionar tokens reconhecidos
         tokens.addAll(_tokenRecognizer.tokens);
         _tokenRecognizer.tokens.clear();
-        
+
         pos = _tokenRecognizer.pos;
         linha = _tokenRecognizer.linha;
         coluna = _tokenRecognizer.coluna;
         continue;
       }
-      
+
       // Caractere inválido - erro léxico
-      _errorHandler.adicionarErro('Caractere inválido: $char', linha, coluna, codigo, pos);
+      _errorHandler.adicionarErro(
+        'Caractere inválido: $char',
+        linha,
+        coluna,
+        codigo,
+        pos,
+      );
       avancar();
     }
 
@@ -185,7 +197,12 @@ class Lexer {
   String olharProximo() => pos + 1 < codigo.length ? codigo[pos + 1] : '';
 
   /// Adiciona um token à lista de tokens
-  void adicionar(TokenType tipo, String lexema, [int? linhaToken, int? colunaToken]) {
+  void adicionar(
+    TokenType tipo,
+    String lexema, [
+    int? linhaToken,
+    int? colunaToken,
+  ]) {
     tokens.add(Token(tipo, lexema, linhaToken ?? linha, colunaToken ?? coluna));
   }
 
@@ -198,16 +215,14 @@ class Lexer {
   /// Retorna a lista de erros estruturados (LexError)
   List<LexError> get listaErrosEstruturados => _errorHandler.listaLexErrors;
 
-
   // ===== Funções auxiliares para reconhecimento de caracteres =====
-  
+
   /// Verifica se o caractere é um dígito
   bool _isDigit(String c) => RegExp(r'[0-9]').hasMatch(c);
-  
+
   /// Verifica se o caractere é uma letra ou underscore
   bool _isLetter(String c) => RegExp(r'[a-zA-Z_]').hasMatch(c);
-  
-  
+
   /// Verifica se o caractere é um operador ou símbolo válido
   bool _isOperadorOuSimbolo(String c) {
     return operadores.contains(c) || simbolos.contains(c);

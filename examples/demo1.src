@@ -1,8 +1,2 @@
-uids x = (1 + 2) * 3;
-uids s = "olá mundo";
-int i = 42;
-// comentário de exemplo
-uids teste = "Teste";
-string teste = 323; 
 
-if(int i = 0 )(int i = 0)
+int if() {}

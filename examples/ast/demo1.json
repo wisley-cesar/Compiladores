@@ -1,0 +1,101 @@
+{
+  "type": "Program",
+  "statements": [
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "x",
+      "initializer": {
+        "type": "Binary",
+        "operator": "*",
+        "left": {
+          "type": "Binary",
+          "operator": "+",
+          "left": {
+            "type": "Literal",
+            "lexeme": "1",
+            "kind": "int",
+            "linha": 1,
+            "coluna": 11
+          },
+          "right": {
+            "type": "Literal",
+            "lexeme": "2",
+            "kind": "int",
+            "linha": 1,
+            "coluna": 15
+          },
+          "linha": 1,
+          "coluna": 13
+        },
+        "right": {
+          "type": "Literal",
+          "lexeme": "3",
+          "kind": "int",
+          "linha": 1,
+          "coluna": 20
+        },
+        "linha": 1,
+        "coluna": 18
+      },
+      "linha": 1,
+      "coluna": 1
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "s",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "olá mundo",
+        "kind": "string",
+        "linha": 2,
+        "coluna": 10
+      },
+      "linha": 2,
+      "coluna": 1
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "int",
+      "name": "i",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "42",
+        "kind": "int",
+        "linha": 3,
+        "coluna": 9
+      },
+      "linha": 3,
+      "coluna": 1
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "uids",
+      "name": "teste",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "Teste",
+        "kind": "string",
+        "linha": 5,
+        "coluna": 14
+      },
+      "linha": 5,
+      "coluna": 1
+    },
+    {
+      "type": "VarDecl",
+      "keyword": "string",
+      "name": "teste",
+      "initializer": {
+        "type": "Literal",
+        "lexeme": "323",
+        "kind": "int",
+        "linha": 6,
+        "coluna": 16
+      },
+      "linha": 6,
+      "coluna": 1
+    }
+  ]
+}

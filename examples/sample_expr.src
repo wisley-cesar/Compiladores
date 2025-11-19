@@ -1,0 +1,4 @@
+uids a = 1 + 2 * 3;
+uids b = (1 + 2) * 3;
+uids c = true && false || true;
+a = b / 2;
