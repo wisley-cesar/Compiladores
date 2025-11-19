@@ -116,6 +116,18 @@ literal ::= NUMBER | STRING | 'true' | 'false' ;
 - Aceitar/Rejeitar (40%): `test/acceptance/` e `test/rejection/` contêm casos mínimos e limites usados para comprovar comportamento.
 - Exemplos e ASTs (suporte à documentação): exemplos em `examples/` e ASTs em `examples/ast/`.
 
+**Cobertura dos critérios de avaliação (relatório de conformidade)**:
+
+| Critério                                               | Evidência no código/testes                                                   | Observações |
+|--------------------------------------------------------|------------------------------------------------------------------------------|-------------|
+| Correção do parser (aceita/rejeita corretamente) – 40% | `test/acceptance/golden_examples_test.dart`, `test/rejection/`, `test/integration/lexer_parser_integration_test.dart` validam casos positivos/negativos end‑to‑end. | Parser integrado ao lexer; exemplos válidos não geram erros e exemplos inválidos geram ao menos um erro (lex/parse/semântico). |
+| Cobertura da gramática – 20%                           | Gramática formal em `docs/grammar.ebnf`; implementação correspondente em `lib/parser.dart` (declarações, comandos, blocos, if/else, while, for, expressões com precedência). | A gramática aceita tipos adicionais (`string`, `double`, `uids`). Caso o professor exija estritamente `int|float|bool`, registrar justificativa ou ajustar. |
+| Tratamento de erros sintáticos – 15%                   | Classe `ParseError` (`lib/parse_error.dart`) e testes `test/parser_error_messages_test.dart`, `test/parser_recovery_test.dart`. | Mensagens incluem esperado/recebido, linha/coluna e contexto; `_synchronize()` garante que o parser reporte múltiplos erros por execução. |
+| Clareza do código e boas práticas – 10%                | Organização modular (`lib/ast/`, `lib/parser.dart`, `lib/token_stream.dart`), documentação inline e guias em `docs/parser_design.md`. | Código Dart formatado (`dart format .`) e pronto para `dart analyze`. |
+| Documentação – 15%                                     | README (visão geral do lexer), `REPORT.md` (este documento), `docs/grammar.ebnf`, `docs/parser_design.md`, exemplos `examples/*.src` e ASTs em `examples/ast/*.json`. | Incluir capturas recentes de `dart test`/`dart analyze` e exemplos aceitos/rejeitados para reforçar a evidência documental. |
+
+> Próximo passo sugerido: anexar na entrega final um apêndice com a saída de `dart test -r expanded` e um trecho aceito/rejeitado (incluindo mensagem de erro) para fechar o ciclo de evidências.
+
 **Como executar (ambiente macOS / `zsh`)**:
 - Executar todos os testes:
 
@@ -146,10 +158,73 @@ dart run bin/debug_parser.dart examples/demo1.src > examples/ast/demo1.json
 - Exemplos de entrada: `examples/*.src`.
 - ASTs JSON geradas: `examples/ast/*.json` — úteis para validar saída do parser.
 
+**Apêndice A — Execução de `dart test -r expanded` (18/11/2025, pós-ajustes)**:
+
+```text
+$ dart test -r expanded
+00:00 +0: loading test/expression_logical_relational_test.dart
+00:00 +26: test/parser_for_return_function_test.dart: Parse for-loop, return ...
+00:00 +60: test/rejection/rejection_examples_test.dart: rejects: missing_semicolon
+00:00 +87: All tests passed!
+```
+
+*Observação*: os testes agora cobrem toda a suíte (lexer, parser, integração e semântica) sem falhas — evidenciando que os fixtures e a gramática estão alinhados.
+
+**Apêndice B — Execução de `dart analyze` (18/11/2025, pós-ajustes)**:
+
+```text
+$ dart analyze
+Analyzing Compiladores...
+No issues found!
+```
+
+*Observação*: todos os avisos anteriores (curly braces, strings com escape desnecessário, interpolação) foram endereçados.
+
+**Apêndice C — Exemplos aceito/rejeitado (CLI `bin/main.dart`)**:
+
+- **Programa aceito (`examples/example_if_else.src`)**
+
+```text
+$ dart run bin/main.dart examples/example_if_else.src --dump-ast-json
+=== TOKENS ===
+(PALAVRARESERVADA, "uids", linha: 2, col: 1)
+...
+(EOF, "EOF", linha: 6, col: 1)
+=== AST (JSON) ===
+{
+  "type": "Program",
+  "statements": [
+    {"type": "VarDecl", "keyword": "uids", "name": "a", ...},
+    {"type": "IfStmt", "condition": {...}, "then": {...}, "else": {...}}
+  ]
+}
+=== SYMBOL TABLE (JSON) ===
+[{"id":1,"name":"a","type":"int","isMutable":true}]
+```
+
+- **Programa rejeitado (`examples/demo1.src`)**
+
+```text
+$ dart run bin/main.dart examples/demo1.src --dump-ast-json
+=== TOKENS ===
+(PALAVRARESERVADA, "int", linha: 2, col: 1)
+...
+=== PARSE ERRORS ===
+Linha 2, Coluna 5: Esperado identificador, encontrado if
+int if() {}
+    ^
+
+Linha 2, Coluna 10: Esperado ")", encontrado {
+int if() {}
+         ^
+=== AST (JSON) ===
+{ "type": "Program", "statements": [ { "type": "Block", "statements": [] } ] }
+```
+
 **Checklist / Próximos passos sugeridos**:
-- [ ] Executar `dart test` completo e ajustar regressões remanescentes.
-- [ ] Rodar `dart analyze` e corrigir problemas relatados.
-- [ ] Consolidar `REPORT.md` com evidências de execução (logs de testes, trechos de saída do parser) se necessário para entrega.
+- [x] Executar `dart test` completo e ajustar regressões remanescentes.
+- [x] Rodar `dart analyze` e corrigir problemas relatados.
+- [x] Consolidar `REPORT.md` com evidências de execução (logs de testes, trechos de saída do parser) se necessário para entrega.
 - [ ] Adicionar workflow de CI (`.github/workflows/dart.yml`) para automatizar testes e análise.
 
 ---

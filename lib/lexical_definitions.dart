@@ -1,4 +1,4 @@
-/// Definições léxicas compartilhadas: operadores, símbolos e palavras reservadas
+// Definições léxicas compartilhadas: operadores, símbolos e palavras reservadas
 
 const Set<String> operadoresSet = {
   '+',
@@ -65,7 +65,6 @@ const Set<String> palavrasReservadasSet = {
   'char',
   'return',
   'void',
-  'main',
   'true',
   'false',
   'null',

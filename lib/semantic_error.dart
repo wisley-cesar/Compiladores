@@ -21,8 +21,10 @@ class SemanticError {
         ? ' (linha: $linha, coluna: $coluna)'
         : '';
     final prefix = isWarning ? 'SemanticWarning' : 'SemanticError';
-    return '$prefix: $mensagem${simbolo != null ? ' ("$simbolo")' : ''}$pos' +
-        (contexto != null ? '\nContexto: "$contexto"' : '');
+    final base =
+        '$prefix: $mensagem${simbolo != null ? ' ("$simbolo")' : ''}$pos';
+    final ctx = contexto != null ? '\nContexto: "$contexto"' : '';
+    return '$base$ctx';
   }
 
   /// Serializa o erro semântico para um mapa (útil para exportar/JSON)

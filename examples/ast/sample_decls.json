@@ -19,6 +19,7 @@
       "type": "VarDecl",
       "keyword": "float",
       "name": "y",
+      "initializer": null,
       "linha": 2,
       "coluna": 1
     },

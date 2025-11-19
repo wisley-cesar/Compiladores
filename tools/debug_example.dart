@@ -19,7 +19,9 @@ void main(List<String> args) {
 
   if (parser.errors.isNotEmpty) {
     print('\nParser errors:');
-    for (var e in parser.errors) print(e.toString());
+    for (var e in parser.errors) {
+      print(e.toString());
+    }
   } else {
     print('\nNo parser errors.');
   }

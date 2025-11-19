@@ -264,7 +264,7 @@ class SemanticAnalyzer {
     for (final p in f.params) {
       try {
         symbols.add(p.name, type: p.type, isMutable: false);
-      } on StateError catch (e) {
+      } on StateError {
         errors.add(
           SemanticError(
             'Redeclaração de parâmetro "${p.name}" em função "${f.name}"',
@@ -447,8 +447,9 @@ class SemanticAnalyzer {
         // If symbol had no declared type (uids) and we inferred one, update it
         if (existing.type == null && initType != null) existing.type = initType;
         // If initializer absent and symbol still has no type, set to 'dynamic'
-        if (existing.type == null && decl.initializer == null)
+        if (existing.type == null && decl.initializer == null) {
           existing.type = 'dynamic';
+        }
       }
       return;
     }

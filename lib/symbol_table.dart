@@ -1,5 +1,5 @@
-/// Tabela de símbolos simples com UID interno
-/// Esta é uma implementação inicial: adicione escopos aninhados quando for necessário.
+// Tabela de símbolos simples com UID interno
+// Esta é uma implementação inicial: adicione escopos aninhados quando for necessário.
 
 class Symbol {
   final int id; // UID interno

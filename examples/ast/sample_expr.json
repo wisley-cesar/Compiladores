@@ -8,12 +8,30 @@
       "initializer": {
         "type": "Binary",
         "operator": "+",
-        "left": {"type": "Literal", "lexeme": "1", "kind": "int", "linha": 1, "coluna": 10},
+        "left": {
+          "type": "Literal",
+          "lexeme": "1",
+          "kind": "int",
+          "linha": 1,
+          "coluna": 10
+        },
         "right": {
           "type": "Binary",
           "operator": "*",
-          "left": {"type": "Literal", "lexeme": "2", "kind": "int", "linha": 1, "coluna": 14},
-          "right": {"type": "Literal", "lexeme": "3", "kind": "int", "linha": 1, "coluna": 18},
+          "left": {
+            "type": "Literal",
+            "lexeme": "2",
+            "kind": "int",
+            "linha": 1,
+            "coluna": 14
+          },
+          "right": {
+            "type": "Literal",
+            "lexeme": "3",
+            "kind": "int",
+            "linha": 1,
+            "coluna": 18
+          },
           "linha": 1,
           "coluna": 16
         },
@@ -33,14 +51,32 @@
         "left": {
           "type": "Binary",
           "operator": "+",
-          "left": {"type": "Literal", "lexeme": "1", "kind": "int", "linha": 2, "coluna": 10},
-          "right": {"type": "Literal", "lexeme": "2", "kind": "int", "linha": 2, "coluna": 14},
+          "left": {
+            "type": "Literal",
+            "lexeme": "1",
+            "kind": "int",
+            "linha": 2,
+            "coluna": 11
+          },
+          "right": {
+            "type": "Literal",
+            "lexeme": "2",
+            "kind": "int",
+            "linha": 2,
+            "coluna": 15
+          },
           "linha": 2,
-          "coluna": 12
+          "coluna": 13
         },
-        "right": {"type": "Literal", "lexeme": "3", "kind": "int", "linha": 2, "coluna": 19},
+        "right": {
+          "type": "Literal",
+          "lexeme": "3",
+          "kind": "int",
+          "linha": 2,
+          "coluna": 20
+        },
         "linha": 2,
-        "coluna": 16
+        "coluna": 18
       },
       "linha": 2,
       "coluna": 1
@@ -55,26 +91,60 @@
         "left": {
           "type": "Binary",
           "operator": "&&",
-          "left": {"type": "Literal", "lexeme": "true", "kind": "bool", "linha": 3, "coluna": 10},
-          "right": {"type": "Literal", "lexeme": "false", "kind": "bool", "linha": 3, "coluna": 17},
+          "left": {
+            "type": "Literal",
+            "lexeme": "true",
+            "kind": "bool",
+            "linha": 3,
+            "coluna": 10
+          },
+          "right": {
+            "type": "Literal",
+            "lexeme": "false",
+            "kind": "bool",
+            "linha": 3,
+            "coluna": 18
+          },
           "linha": 3,
-          "coluna": 14
+          "coluna": 15
         },
-        "right": {"type": "Literal", "lexeme": "true", "kind": "bool", "linha": 3, "coluna": 26},
+        "right": {
+          "type": "Literal",
+          "lexeme": "true",
+          "kind": "bool",
+          "linha": 3,
+          "coluna": 27
+        },
         "linha": 3,
-        "coluna": 20
+        "coluna": 24
       },
       "linha": 3,
       "coluna": 1
     },
     {
       "type": "Assign",
-      "target": {"type": "Identifier", "name": "a", "linha": 4, "coluna": 1},
+      "target": {
+        "type": "Identifier",
+        "name": "a",
+        "linha": 4,
+        "coluna": 1
+      },
       "value": {
         "type": "Binary",
         "operator": "/",
-        "left": {"type": "Identifier", "name": "b", "linha": 4, "coluna": 5},
-        "right": {"type": "Literal", "lexeme": "2", "kind": "int", "linha": 4, "coluna": 11},
+        "left": {
+          "type": "Identifier",
+          "name": "b",
+          "linha": 4,
+          "coluna": 5
+        },
+        "right": {
+          "type": "Literal",
+          "lexeme": "2",
+          "kind": "int",
+          "linha": 4,
+          "coluna": 9
+        },
         "linha": 4,
         "coluna": 7
       },
