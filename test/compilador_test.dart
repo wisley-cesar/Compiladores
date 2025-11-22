@@ -1,7 +1,7 @@
 // ignore_for_file: unused_local_variable
 import 'package:test/test.dart';
-import 'package:compilador/lexer.dart';
-import 'package:compilador/token.dart';
+import 'package:compilador/lexica/lexer.dart';
+import 'package:compilador/lexica/token.dart';
 
 /// Testes abrangentes para o analisador léxico
 void main() {

@@ -2,11 +2,11 @@
 import 'dart:io';
 import 'dart:convert';
 
-import '../lib/lexer.dart';
-import '../lib/token_stream.dart';
-import '../lib/parser.dart';
-import '../lib/semantic_analyzer.dart';
-import '../lib/bytecode_generator.dart';
+import 'package:compilador/lexica/lexer.dart';
+import 'package:compilador/lexica/token_stream.dart';
+import 'package:compilador/sintatica/parser.dart';
+import 'package:compilador/semantic_analyzer.dart';
+import 'package:compilador/vm/bytecode_generator.dart';
 
 void main(List<String> args) {
   print('=== TESTE DE OPERADORES INCREMENTAIS (++ e --) ===\n');
@@ -79,11 +79,11 @@ void testCase(String src, String name) {
   print('Código:');
   print(src);
   print('---');
-  
+
   try {
     final lexer = Lexer(src);
     final tokens = lexer.analisar();
-    
+
     if (lexer.listaErrosEstruturados.isNotEmpty) {
       print('ERROS LÉXICOS:');
       for (final e in lexer.listaErrosEstruturados) {
@@ -91,11 +91,11 @@ void testCase(String src, String name) {
       }
       return;
     }
-    
+
     final stream = TokenStream(tokens);
     final parser = Parser(stream, src);
     final program = parser.parseProgram();
-    
+
     if (parser.errors.isNotEmpty) {
       print('ERROS DE PARSE:');
       for (final e in parser.errors) {
@@ -103,10 +103,10 @@ void testCase(String src, String name) {
       }
       return;
     }
-    
+
     final analyzer = SemanticAnalyzer(null, src);
     final symbolTable = analyzer.analyze(program);
-    
+
     final semanticErrors = analyzer.errors.where((e) => !e.isWarning).toList();
     if (semanticErrors.isNotEmpty) {
       print('ERROS SEMÂNTICOS:');
@@ -114,10 +114,10 @@ void testCase(String src, String name) {
         print('  - $e');
       }
     }
-    
+
     final generator = BytecodeGenerator(symbolTable);
     final bytecode = generator.generate(program);
-    
+
     if (generator.errors.isNotEmpty) {
       print('ERROS DE GERAÇÃO DE BYTECODE:');
       for (final e in generator.errors) {
@@ -125,13 +125,13 @@ void testCase(String src, String name) {
       }
       return;
     }
-    
+
     print('BYTECODE GERADO:');
     print(bytecode.toString());
-    
+
     print('\nJSON:');
     print(JsonEncoder.withIndent('  ').convert(bytecode.toJson()));
-    
+
     print('\n✓ SUCESSO\n');
   } catch (e, stackTrace) {
     print('ERRO: $e');
@@ -143,21 +143,21 @@ void testCaseError(String src, String name) {
   print('Código:');
   print(src);
   print('---');
-  
+
   try {
     final lexer = Lexer(src);
     final tokens = lexer.analisar();
-    
+
     final stream = TokenStream(tokens);
     final parser = Parser(stream, src);
     final program = parser.parseProgram();
-    
+
     final analyzer = SemanticAnalyzer(null, src);
     final symbolTable = analyzer.analyze(program);
-    
+
     final generator = BytecodeGenerator(symbolTable);
     final bytecode = generator.generate(program);
-    
+
     if (generator.errors.isNotEmpty) {
       print('ERROS DETECTADOS (esperado):');
       for (final e in generator.errors) {
@@ -172,4 +172,3 @@ void testCaseError(String src, String name) {
     print('Stack trace: $stackTrace');
   }
 }
-

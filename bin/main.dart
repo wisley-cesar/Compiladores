@@ -1,14 +1,15 @@
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:compilador/lexer.dart';
-import 'package:compilador/token_stream.dart';
-import 'package:compilador/parser.dart';
+import 'package:compilador/lexica/lexer.dart';
+import 'package:compilador/lexica/token_stream.dart';
+import 'package:compilador/sintatica/parser.dart';
 import 'package:compilador/semantic_analyzer.dart';
-import 'package:compilador/ast/ast.dart';
-import 'package:compilador/parse_error.dart';
+import 'package:compilador/sintatica/ast/ast.dart';
+import 'package:compilador/sintatica/parse_error.dart';
 import 'package:compilador/semantic_error.dart';
-import 'package:compilador/bytecode_generator.dart';
+import 'package:compilador/vm/bytecode_generator.dart';
+import 'package:compilador/vm/bytecode_vm.dart';
 
 /// Programa principal do compilador
 /// Demonstra a análise léxica de código-fonte
@@ -44,7 +45,7 @@ int a = 10;
 
   print('Código de entrada:\n');
   print(src);
-  print('\n' + '=' * 50 + '\n');
+  print('\n${'=' * 50}\n');
 
   // Executar lexer
   final lexer = Lexer(src);
@@ -70,6 +71,8 @@ int a = 10;
   final dumpErrorsJson = args.contains('--dump-errors-json');
   final dumpBytecode = args.contains('--dump-bytecode');
   final dumpBytecodeJson = args.contains('--dump-bytecode-json');
+  final runVm = args.contains('--run-vm');
+  final vmTrace = args.contains('--vm-trace');
   // Suporta escrever tokens em arquivo: --tokens-out <file>
   String? tokensOutPath;
   final tokOutIdx = args.indexOf('--tokens-out');
@@ -174,7 +177,9 @@ int a = 10;
 
     if (analyzer.errors.isNotEmpty) {
       print('\n=== SEMANTIC ERRORS ===');
-      for (final e in analyzer.errors) print(formatErrorPretty(e, src));
+      for (final e in analyzer.errors) {
+        print(formatErrorPretty(e, src));
+      }
     }
 
     // Geração de bytecode
@@ -197,6 +202,33 @@ int a = 10;
         print('\n=== BYTECODE GENERATION ERRORS ===');
         for (final e in generator.errors) {
           print(formatErrorPretty(e, src));
+        }
+      }
+
+      // Executar na VM se solicitado
+      if (runVm && generator.errors.isEmpty) {
+        print('\n=== EXECUTANDO NA VM ===');
+        try {
+          final vm = VirtualMachine(bytecode);
+          final result = vm.run(trace: vmTrace);
+
+          print('\nVariáveis globais:');
+          if (result.globals.isEmpty) {
+            print('  (nenhuma variável global)');
+          } else {
+            for (final entry in result.globals.entries) {
+              print('  ${entry.key} = ${entry.value}');
+            }
+          }
+
+          if (result.stack.isNotEmpty) {
+            print('\nPilha final:');
+            for (var i = 0; i < result.stack.length; i++) {
+              print('  [$i] ${result.stack[i]}');
+            }
+          }
+        } catch (e) {
+          print('Erro na execução da VM: $e');
         }
       }
     }

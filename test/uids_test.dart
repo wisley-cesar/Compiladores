@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
-import 'package:compilador/lexer.dart';
-import 'package:compilador/token.dart';
+import 'package:compilador/lexica/lexer.dart';
+import 'package:compilador/lexica/token.dart';
 
 void main() {
   group('Lexer - uids keyword', () {

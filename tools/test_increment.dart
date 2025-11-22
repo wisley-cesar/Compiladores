@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:compilador/lexer.dart';
-import 'package:compilador/token_stream.dart';
-import 'package:compilador/parser.dart';
+import 'package:compilador/lexica/lexer.dart';
+import 'package:compilador/lexica/token_stream.dart';
+import 'package:compilador/sintatica/parser.dart';
 import 'package:compilador/semantic_analyzer.dart';
-import 'package:compilador/bytecode_generator.dart';
+import 'package:compilador/vm/bytecode_generator.dart';
 
 void main(List<String> args) {
   print('=== TESTE DE OPERADORES INCREMENTAIS (++ e --) ===\n');

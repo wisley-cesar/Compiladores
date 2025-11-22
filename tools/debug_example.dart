@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:compilador/lexer.dart';
-import 'package:compilador/token_stream.dart';
-import 'package:compilador/parser.dart';
-import 'package:compilador/ast/ast.dart';
+import 'package:compilador/lexica/lexer.dart';
+import 'package:compilador/lexica/token_stream.dart';
+import 'package:compilador/sintatica/parser.dart';
+import 'package:compilador/sintatica/ast/ast.dart';
 
 void main(List<String> args) {
   final path = 'examples/example_if_else.src';

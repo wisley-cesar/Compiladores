@@ -1,8 +1,8 @@
 import 'package:test/test.dart';
-import 'package:compilador/lexer.dart';
-import 'package:compilador/token_stream.dart';
-import 'package:compilador/parser.dart';
-import 'package:compilador/ast/ast.dart';
+import 'package:compilador/lexica/lexer.dart';
+import 'package:compilador/lexica/token_stream.dart';
+import 'package:compilador/sintatica/parser.dart';
+import 'package:compilador/sintatica/ast/ast.dart';
 
 void main() {
   group('Parser - precedência e associatividade de expressões', () {

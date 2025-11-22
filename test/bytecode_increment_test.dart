@@ -1,12 +1,11 @@
 import 'package:test/test.dart';
-import 'package:compilador/lexer.dart';
-import 'package:compilador/token_stream.dart';
-import 'package:compilador/parser.dart';
+import 'package:compilador/lexica/lexer.dart';
+import 'package:compilador/lexica/token_stream.dart';
+import 'package:compilador/sintatica/parser.dart';
 import 'package:compilador/semantic_analyzer.dart';
-import 'package:compilador/bytecode_generator.dart';
-import 'package:compilador/bytecode.dart';
-import 'dart:convert';
-
+import 'package:compilador/vm/bytecode_generator.dart';
+import 'package:compilador/vm/bytecode.dart';
+import 'dart:convert'; 
 void main() {
   group('Bytecode Generator - Increment/Decrement Operators', () {
     test('prefixo ++i em expressão', () {

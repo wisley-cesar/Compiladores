@@ -144,7 +144,7 @@ Se `--tokens-out` for usada, o programa criará o arquivo (com diretórios neces
 ### Exemplo de Uso
 
 ```dart
-import 'package:compilador/lexer.dart';
+import 'package:compilador/lexica/lexer.dart';
 
 void main() {
   final codigo = '''
@@ -176,7 +176,7 @@ void main() {
 ### Exemplo mínimo — usar o Lexer com uma string (linha de comando)
 
 ```dart
-import 'package:compilador/lexer.dart';
+import 'package:compilador/lexica/lexer.dart';
 
 void main() {
   final codigo = 'uids x = (1 + 2) * 3;';
@@ -211,7 +211,7 @@ Saída exemplo (lista de tokens):
 ```dart
 import 'dart:io';
 import 'dart:convert';
-import 'package:compilador/lexer.dart';
+import 'package:compilador/lexica/lexer.dart';
 import 'package:compilador/symbol_table.dart';
 
 void main() {

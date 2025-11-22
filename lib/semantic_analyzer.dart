@@ -1,4 +1,4 @@
-import 'package:compilador/ast/ast.dart';
+import 'package:compilador/sintatica/ast/ast.dart';
 import 'symbol_table.dart';
 import 'semantic_error.dart';
 import 'package:compilador/error_context.dart';
